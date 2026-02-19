@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROV Control Station</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a25;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --primary: #00d4ff;
+      --success: #00ff88;
+      --warning: #ffaa00;
+      --danger: #ff4444;
+      --border: #2a2a3a;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(0, 212, 255, 0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    
+    .logo h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    .logo p {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    
+    .status-bar {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .status-badge.online {
+      background: rgba(0, 255, 136, 0.2);
+      color: var(--success);
+    }
+    
+    .status-badge.offline {
+      background: rgba(255, 68, 68, 0.2);
+      color: var(--danger);
+    }
+    
+    .main-container {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    
+    @media (max-width: 1200px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .left-column, .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .card-content {
+      padding: 1.25rem;
+    }
+    
+    .video-container {
+      aspect-ratio: 16/9;
+      background: #000;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .video-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    
+    .video-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.7);
+      color: var(--text-secondary);
+    }
+    
+    .video-overlay .icon {
+      font-size: 48px;
+      margin-bottom: 1rem;
+    }
+    
+    .video-info {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    
+    .video-controls {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    .input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .input-group input {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+    }
+    
+    .btn {
+      padding: 0.625rem 1rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: #000;
+    }
+    
+    .btn-primary:hover {
+      background: #33ddff;
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #ff6666;
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: #000;
+    }
+    
+    .btn-success:hover {
+      background: #33ff99;
+    }
+    
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    
+    .btn-outline:hover {
+      background: var(--bg-secondary);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-lg {
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    
+    .telemetry-item {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    
+    .telemetry-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+    
+    .telemetry-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      font-family: 'Consolas', monospace;
+    }
+    
+    .telemetry-value.primary {
+      color: var(--primary);
+    }
+    
+    .telemetry-value.success {
+      color: var(--success);
+    }
+    
+    .telemetry-value.warning {
+      color: var(--warning);
+    }
+    
+    .telemetry-value.danger {
+      color: var(--danger);
+    }
+    
+    .attitude-canvas {
+      width: 100%;
+      height: 200px;
+      background: #0a0a0f;
+      border-radius: 8px;
+    }
+    
+    .control-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .control-section-title {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .mode-select {
+      width: 100%;
+      padding: 0.625rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+    }
+    
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .alert-warning {
+      background: rgba(255, 170, 0, 0.1);
+      border: 1px solid rgba(255, 170, 0, 0.3);
+      color: var(--warning);
+    }
+    
+    .gamepad-status {
+      padding: 0.75rem;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .gamepad-status.connected {
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+    
+    .gamepad-status.disconnected {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+    }
+    
+    .gamepad-values {
+      display: flex;
+      gap: 1rem;
+      font-family: monospace;
+      font-size: 0.75rem;
+    }
+    
+    .gamepad-values span {
+      color: var(--primary);
+    }
+    
+    .manual-controls {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+    
+    .manual-controls button {
+      padding: 0.5rem;
+      font-size: 0.75rem;
+    }
+    
+    .battery-bar {
+      height: 8px;
+      background: var(--bg-secondary);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    
+    .battery-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    
+    .battery-fill.high {
+      background: var(--success);
+    }
+    
+    .battery-fill.medium {
+      background: var(--warning);
+    }
+    
+    .battery-fill.low {
+      background: var(--danger);
+    }
+    
+    .footer {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 1rem 2rem;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+    
+    .footer span {
+      margin: 0 1rem;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3a3a4a;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">🌊</div>
+      <div>
+        <h1>ROV Control Station</h1>
+        <p>BlueOS / ArduSub Interface</p>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-item">
+        <span>🔌</span>
+        <span>Backend:</span>
+        <span id="backend-status" class="status-badge offline">Checking...</span>
+      </div>
+      <div class="status-item">
+        <span>📡</span>
+        <span>MAVLink:</span>
+        <span id="mavlink-status" class="status-badge offline">Offline</span>
+      </div>
+      <div class="status-item">
+        <span>⚡</span>
+        <span id="message-rate">0 msg/s</span>
+      </div>
+      <div class="status-item">
+        <span>🔋</span>
+        <span id="battery-indicator">--%</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="left-column">
+      <!-- Video Feed -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📹</span>
+            <span>Video Feed</span>
+          </div>
+          <span id="video-status" class="status-badge offline">Offline</span>
+        </div>
+        <div class="card-content">
+          <div class="input-group">
+            <input type="text" id="video-ip" placeholder="BlueOS IP" value="192.168.2.2">
+            <input type="text" id="video-port" placeholder="Port" value="6020" style="width: 80px;">
+          </div>
+          <div class="video-container">
+            <video id="video-player" autoplay playsinline muted></video>
+            <div id="video-overlay" class="video-overlay">
+              <div class="icon">📺</div>
+              <p>No video signal</p>
+            </div>
+            <div id="video-info" class="video-info hidden">
+              <span style="color: #00ff88;">●</span>
+              <span id="stream-name">Live</span>
+            </div>
+          </div>
+          <div class="video-controls">
+            <button id="btn-video-connect" class="btn btn-primary">Start Stream</button>
+            <button id="btn-video-disconnect" class="btn btn-danger hidden">Stop Stream</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attitude Indicator -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>🧭</span>
+            <span>Attitude Indicator</span>
+          </div>
+        </div>
+        <div class="card-content">
+          <canvas id="attitude-canvas" class="attitude-canvas" width="600" height="200"></canvas>
+          <div class="telemetry-grid" style="margin-top: 1rem;">
+            <div class="telemetry-item">
+              <div class="telemetry-label">Roll</div>
+              <div id="attitude-roll" class="telemetry-value">--°</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">Pitch</div>
+              <div id="attitude-pitch" class="telemetry-value">--°</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">Yaw</div>
+              <div id="attitude-yaw" class="telemetry-value primary">--°</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">Heading</div>
+              <div id="attitude-heading" class="telemetry-value primary">--°</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-column">
+      <!-- Vehicle Control -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>⚙️</span>
+            <span>Vehicle Control</span>
+          </div>
+        </div>
+        <div class="card-content">
+          <!-- Arm/Disarm -->
+          <div class="control-section">
+            <div class="control-section-title">Vehicle State</div>
+            <button id="btn-arm" class="btn btn-success btn-lg" style="width: 100%;">
+              <span>⚡</span>
+              <span>ARM</span>
+            </button>
+            <button id="btn-disarm" class="btn btn-danger btn-lg hidden" style="width: 100%;">
+              <span>🛑</span>
+              <span>DISARM</span>
+            </button>
+            <div id="armed-warning" class="alert alert-warning hidden" style="margin-top: 0.5rem;">
+              <span>⚠️</span>
+              <span>Vehicle is ARMED. Motors will spin on input.</span>
+            </div>
+          </div>
+
+          <!-- Flight Mode -->
+          <div class="control-section">
+            <div class="control-section-title">Flight Mode</div>
+            <select id="flight-mode" class="mode-select">
+              <option value="9">MANUAL</option>
+              <option value="0">STABILIZE</option>
+              <option value="2">DEPTH HOLD</option>
+              <option value="7">POSHOLD</option>
+              <option value="6">SURFACE</option>
+            </select>
+            <p id="mode-description" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">
+              Direct control without stabilization
+            </p>
+          </div>
+
+          <!-- Gamepad Status -->
+          <div class="control-section">
+            <div class="control-section-title">Gamepad Control</div>
+            <div id="gamepad-status" class="gamepad-status disconnected">
+              <div>
+                <span>🎮</span>
+                <span id="gamepad-text">No gamepad detected</span>
+              </div>
+              <div id="gamepad-values" class="gamepad-values hidden">
+                <span>R:0</span>
+                <span>P:0</span>
+                <span>Y:0</span>
+                <span>T:0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Manual Controls -->
+          <div id="manual-controls" class="control-section hidden">
+            <div class="control-section-title">Manual Control Test</div>
+            <div class="manual-controls">
+              <button class="btn btn-outline" data-axis="x" data-value="500">Forward</button>
+              <button class="btn btn-outline" data-axis="x" data-value="-500">Back</button>
+              <button class="btn btn-outline" data-axis="y" data-value="-500">Left</button>
+              <button class="btn btn-outline" data-axis="y" data-value="500">Right</button>
+            </div>
+            <div class="manual-controls" style="margin-top: 0.5rem;">
+              <button class="btn btn-outline" data-axis="z" data-value="800">Ascend</button>
+              <button class="btn btn-outline" data-axis="z" data-value="200">Descend</button>
+            </div>
+          </div>
+
+          <!-- Emergency -->
+          <div id="emergency-section" class="control-section hidden">
+            <div class="control-section-title">Emergency</div>
+            <button id="btn-emergency" class="btn btn-danger" style="width: 100%;">
+              <span>🚨</span>
+              <span>EMERGENCY DISARM</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Telemetry -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📊</span>
+            <span>Telemetry</span>
+          </div>
+          <span id="telemetry-status" class="status-badge offline">Disconnected</span>
+        </div>
+        <div class="card-content">
+          <div class="telemetry-grid">
+            <div class="telemetry-item">
+              <div class="telemetry-label">Flight Mode</div>
+              <div id="tm-flight-mode" class="telemetry-value primary">--</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">System Status</div>
+              <div id="tm-system-status" class="telemetry-value">--</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">Depth</div>
+              <div id="tm-depth" class="telemetry-value primary">-- m</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">Pressure</div>
+              <div id="tm-pressure" class="telemetry-value">-- hPa</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">Battery Voltage</div>
+              <div id="tm-voltage" class="telemetry-value">-- V</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">Battery %</div>
+              <div id="tm-battery-pct" class="telemetry-value success">--%</div>
+            </div>
+          </div>
+          <div class="battery-bar">
+            <div id="battery-fill" class="battery-fill high" style="width: 0%;"></div>
+          </div>
+          <div class="telemetry-grid" style="margin-top: 1rem;">
+            <div class="telemetry-item">
+              <div class="telemetry-label">Water Temp</div>
+              <div id="tm-temp" class="telemetry-value">-- °C</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">Current</div>
+              <div id="tm-current" class="telemetry-value">-- A</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span>ROV Control Station v1.0.0</span>
+    <span>|</span>
+    <span id="footer-backend">Backend: --</span>
+    <span>|</span>
+    <span id="footer-mavlink">MAVLink: --</span>
+    <span>|</span>
+    <span id="footer-rate">Rate: -- msg/s</span>
+  </footer>
+
+  <script>
+    // Flight mode descriptions
+    const modeDescriptions = {
+      9: 'Direct control without stabilization',
+      0: 'Self-leveling when sticks are centered',
+      2: 'Maintains current depth automatically',
+      7: 'Holds position and heading',
+      6: 'Returns to surface automatically'
+    };
+
+    const flightModeNames = {
+      0: 'STABILIZE',
+      1: 'ACRO',
+      2: 'DEPTH HOLD',
+      3: 'AUTO',
+      4: 'GUIDED',
+      5: 'CIRCLE',
+      6: 'SURFACE',
+      7: 'POSHOLD',
+      9: 'MANUAL',
+      99: 'UNKNOWN'
+    };
+
+    const systemStatusNames = {
+      0: 'UNINIT',
+      1: 'BOOT',
+      2: 'CALIBRATING',
+      3: 'STANDBY',
+      4: 'ACTIVE',
+      5: 'CRITICAL',
+      6: 'EMERGENCY',
+      7: 'POWEROFF',
+      8: 'TERMINATION'
+    };
+
+    const DEBUG = true;
+
+    // State
+    let ws = null;
+    let telemetry = {};
+    let armed = false;
+    let messageCount = 0;
+    let lastRateCalc = Date.now();
+    let gamepadConnected = false;
+    let manualControlInterval = null;
+    let currentMode = 0;
+    let targetSystemId = 1;
+    let targetComponentId = 1;
+    const pendingCommands = new Map();
+    const manualState = { x: 0, y: 0, z: 500, r: 0, buttons: 0 };
+    let lastManualSendAt = 0;
+    const manualModeSet = new Set([9, 0]);
+    let lastHeartbeat = { armed: null, mode: null, systemStatus: null };
+
+    // DOM Elements
+    const els = {
+      backendStatus: document.getElementById('backend-status'),
+      mavlinkStatus: document.getElementById('mavlink-status'),
+      messageRate: document.getElementById('message-rate'),
+      batteryIndicator: document.getElementById('battery-indicator'),
+      videoPlayer: document.getElementById('video-player'),
+      videoOverlay: document.getElementById('video-overlay'),
+      videoInfo: document.getElementById('video-info'),
+      videoStatus: document.getElementById('video-status'),
+      btnVideoConnect: document.getElementById('btn-video-connect'),
+      btnVideoDisconnect: document.getElementById('btn-video-disconnect'),
+      attitudeCanvas: document.getElementById('attitude-canvas'),
+      btnArm: document.getElementById('btn-arm'),
+      btnDisarm: document.getElementById('btn-disarm'),
+      armedWarning: document.getElementById('armed-warning'),
+      flightMode: document.getElementById('flight-mode'),
+      modeDescription: document.getElementById('mode-description'),
+      gamepadStatus: document.getElementById('gamepad-status'),
+      gamepadText: document.getElementById('gamepad-text'),
+      gamepadValues: document.getElementById('gamepad-values'),
+      manualControls: document.getElementById('manual-controls'),
+      emergencySection: document.getElementById('emergency-section'),
+      telemetryStatus: document.getElementById('telemetry-status'),
+      batteryFill: document.getElementById('battery-fill')
+    };
+    currentMode = parseInt(els.flightMode.value, 10);
+
+    // Connect to backend WebSocket
+    function connect() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}`;
+      
+      ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log('Connected to backend');
+        updateBackendStatus(true);
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          handleMessage(msg);
+        } catch (err) {
+          console.error('Error parsing message:', err);
+        }
+      };
+      
+      ws.onclose = () => {
+        console.log('Disconnected from backend');
+        updateBackendStatus(false);
+        updateMAVLinkStatus(false);
+        setTimeout(connect, 3000);
+      };
+      
+      ws.onerror = (err) => {
+        console.error('WebSocket error:', err);
+      };
+    }
+
+    // Handle incoming messages
+    function handleMessage(msg) {
+      switch (msg.type) {
+        case 'telemetry':
+          updateMAVLinkStatus(true); 
+          messageCount++;
+          updateMessageRate();
+          telemetry[msg.data.type] = msg.data;
+          updateTelemetryDisplay();
+          break;
+        case 'initial':
+          telemetry = msg.data;
+          updateTelemetryDisplay();
+          break;
+        case 'connection':
+          if (msg.source === 'mavlink') {
+            updateMAVLinkStatus(msg.status === 'connected');
+          }
+          break;
+        case 'command_response':
+          handleCommandResponse(msg);
+          break;
+      }
+    }
+
+    // Update backend status
+    function updateBackendStatus(connected) {
+      els.backendStatus.textContent = connected ? 'Online' : 'Offline';
+      els.backendStatus.className = 'status-badge ' + (connected ? 'online' : 'offline');
+      document.getElementById('footer-backend').textContent = 'Backend: ' + (connected ? 'Online' : 'Offline');
+    }
+
+    // Update MAVLink status
+    function updateMAVLinkStatus(connected) {
+      els.mavlinkStatus.textContent = connected ? 'Online' : 'Offline';
+      els.mavlinkStatus.className = 'status-badge ' + (connected ? 'online' : 'offline');
+      els.telemetryStatus.textContent = connected ? 'Connected' : 'Disconnected';
+      els.telemetryStatus.className = 'status-badge ' + (connected ? 'online' : 'offline');
+      document.getElementById('footer-mavlink').textContent = 'MAVLink: ' + (connected ? 'Connected' : 'Disconnected');
+    }
+
+    // Update message rate
+    function updateMessageRate() {
+      const now = Date.now();
+      const elapsed = (now - lastRateCalc) / 1000;
+      if (elapsed >= 1) {
+        const rate = Math.round(messageCount / elapsed);
+        els.messageRate.textContent = rate + ' msg/s';
+        document.getElementById('footer-rate').textContent = 'Rate: ' + rate + ' msg/s';
+        messageCount = 0;
+        lastRateCalc = now;
+      }
+    }
+
+    // Update telemetry display
+    function updateTelemetryDisplay() {
+      const att = telemetry.attitude;
+      const press = telemetry.pressure;
+      const bat = telemetry.battery;
+      const hb = telemetry.heartbeat;
+      const vfr = telemetry.vfr_hud;
+
+      // Attitude
+      if (att) {
+        document.getElementById('attitude-roll').textContent = att.roll.toFixed(1) + '°';
+        document.getElementById('attitude-pitch').textContent = att.pitch.toFixed(1) + '°';
+        document.getElementById('attitude-yaw').textContent = att.yaw.toFixed(0) + '°';
+        drawAttitudeIndicator(att.roll, att.pitch, att.yaw);
+      }
+
+      // Heading
+      if (vfr) {
+        document.getElementById('attitude-heading').textContent = vfr.heading.toFixed(0) + '°';
+      } else if (att) {
+        document.getElementById('attitude-heading').textContent = att.yaw.toFixed(0) + '°';
+      }
+
+      // Pressure/Depth
+      if (press) {
+        document.getElementById('tm-depth').textContent = press.depth.toFixed(2) + ' m';
+        document.getElementById('tm-pressure').textContent = press.pressure.toFixed(1) + ' hPa';
+        document.getElementById('tm-temp').textContent = press.temperature.toFixed(1) + ' °C';
+      }
+
+      // Battery
+      if (bat) {
+        document.getElementById('tm-voltage').textContent = bat.voltage.toFixed(2) + ' V';
+        document.getElementById('tm-battery-pct').textContent = bat.remaining + '%';
+        document.getElementById('tm-current').textContent = bat.current.toFixed(2) + ' A';
+        els.batteryIndicator.textContent = bat.remaining + '%';
+        
+        els.batteryFill.style.width = bat.remaining + '%';
+        els.batteryFill.className = 'battery-fill ' + 
+          (bat.remaining > 50 ? 'high' : bat.remaining > 25 ? 'medium' : 'low');
+      }
+
+      // Heartbeat
+      if (hb) {
+        armed = hb.armed;
+        currentMode = Number.isFinite(hb.flightMode) ? hb.flightMode : currentMode;
+        if (Number.isFinite(hb.systemId)) {
+          targetSystemId = hb.systemId;
+        }
+        if (Number.isFinite(hb.componentId)) {
+          targetComponentId = hb.componentId;
+        }
+        document.getElementById('tm-flight-mode').textContent = flightModeNames[hb.flightMode] || 'UNKNOWN';
+        document.getElementById('tm-system-status').textContent = systemStatusNames[hb.systemStatus] || 'UNKNOWN';
+        updateArmedState();
+
+        if (DEBUG) {
+          const modeChanged = lastHeartbeat.mode !== hb.flightMode;
+          const armedChanged = lastHeartbeat.armed !== hb.armed;
+          const statusChanged = lastHeartbeat.systemStatus !== hb.systemStatus;
+          if (modeChanged || armedChanged || statusChanged) {
+            console.debug('Heartbeat update:', {
+              armed: hb.armed,
+              flightMode: hb.flightMode,
+              systemStatus: hb.systemStatus
+            });
+            lastHeartbeat = { armed: hb.armed, mode: hb.flightMode, systemStatus: hb.systemStatus };
+          }
+        }
+      }
+    }
+
+    // Draw attitude indicator
+    function drawAttitudeIndicator(roll, pitch, yaw) {
+      const canvas = els.attitudeCanvas;
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate((-roll * Math.PI) / 180);
+
+      // Sky
+      const skyGrad = ctx.createLinearGradient(0, -height, 0, 0);
+      skyGrad.addColorStop(0, '#1a3a5c');
+      skyGrad.addColorStop(1, '#2d5a87');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(-width, -height, width * 2, height);
+
+      // Ground
+      const groundGrad = ctx.createLinearGradient(0, 0, 0, height);
+      groundGrad.addColorStop(0, '#4a3728');
+      groundGrad.addColorStop(1, '#2d1f14');
+      ctx.fillStyle = groundGrad;
+      const pitchOffset = (pitch / 90) * (height / 2);
+      ctx.fillRect(-width, pitchOffset, width * 2, height);
+
+      // Horizon
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-width, pitchOffset);
+      ctx.lineTo(width, pitchOffset);
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Aircraft symbol
+      ctx.strokeStyle = '#ff0';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(centerX - 50, centerY);
+      ctx.lineTo(centerX - 15, centerY);
+      ctx.moveTo(centerX + 50, centerY);
+      ctx.lineTo(centerX + 15, centerY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff0';
+      ctx.fill();
+    }
+
+    // Update armed state UI
+    function updateArmedState() {
+      if (armed) {
+        els.btnArm.classList.add('hidden');
+        els.btnDisarm.classList.remove('hidden');
+        els.armedWarning.classList.remove('hidden');
+        els.manualControls.classList.remove('hidden');
+        els.emergencySection.classList.remove('hidden');
+      } else {
+        els.btnArm.classList.remove('hidden');
+        els.btnDisarm.classList.add('hidden');
+        els.armedWarning.classList.add('hidden');
+        els.manualControls.classList.add('hidden');
+        els.emergencySection.classList.add('hidden');
+        sendManualControlState({ ...manualState, x: 0, y: 0, r: 0, z: 500 }, true);
+      }
+    }
+
+    // Send command
+    async function sendCommand(command) {
+      if (ws?.readyState === WebSocket.OPEN) {
+        const id = Date.now();
+        ws.send(JSON.stringify({ type: 'command', id, data: command }));
+        if (DEBUG) {
+          console.debug('Command sent:', command.message.type, { id, command });
+        }
+        return id;
+      }
+      if (DEBUG) {
+        console.debug('Command dropped: WebSocket not open');
+      }
+      return null;
+    }
+
+    // ARM/DISARM
+    els.btnArm.addEventListener('click', () => sendArmCommand(1));
+    els.btnDisarm.addEventListener('click', () => sendArmCommand(0));
+    document.getElementById('btn-emergency').addEventListener('click', () => sendArmCommand(0));
+
+    async function sendArmCommand(arm) {
+      const command = {
+        header: { system_id: 255, component_id: 190, sequence: 0 },
+        message: {
+          type: 'COMMAND_LONG',
+          param1: arm,
+          param2: 0, param3: 0, param4: 0, param5: 0, param6: 0, param7: 0,
+          command: { type: 'MAV_CMD_COMPONENT_ARM_DISARM' },
+          target_system: targetSystemId,
+          target_component: targetComponentId,
+          confirmation: 1
+        }
+      };
+      const id = await sendCommand(command);
+      if (id) {
+        pendingCommands.set(id, { type: 'arm', value: arm });
+      }
+    }
+
+    // Flight mode
+    els.flightMode.addEventListener('change', async (e) => {
+      const mode = parseInt(e.target.value);
+      currentMode = mode;
+      els.modeDescription.textContent = modeDescriptions[mode];
+      
+      const command = {
+        header: { system_id: 255, component_id: 190, sequence: 0 },
+        message: {
+          type: 'SET_MODE',
+          target_system: targetSystemId,
+          base_mode: 1,
+          custom_mode: mode
+        }
+      };
+      await sendCommand(command);
+      if (!manualModeSet.has(mode)) {
+        sendManualControlState({ ...manualState, x: 0, y: 0, r: 0, z: 500 }, true);
+      }
+    });
+
+    // Manual controls
+    document.querySelectorAll('.manual-controls button').forEach(btn => {
+      btn.addEventListener('mousedown', () => {
+        const axis = btn.dataset.axis;
+        const value = parseInt(btn.dataset.value);
+        updateManualAxis(axis, value, true);
+      });
+      btn.addEventListener('mouseup', () => {
+        const axis = btn.dataset.axis;
+        const defaultValue = axis === 'z' ? 500 : 0;
+        updateManualAxis(axis, defaultValue, true);
+      });
+      btn.addEventListener('mouseleave', () => {
+        const axis = btn.dataset.axis;
+        const defaultValue = axis === 'z' ? 500 : 0;
+        updateManualAxis(axis, defaultValue, true);
+      });
+    });
+
+    function updateManualAxis(axis, value, force) {
+      manualState[axis] = value;
+      sendManualControlState({ ...manualState }, force);
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function applyDeadzone(value, deadzone) {
+      return Math.abs(value) < deadzone ? 0 : value;
+    }
+
+    function isManualMode() {
+      const mode = Number.isFinite(currentMode) ? currentMode : parseInt(els.flightMode.value, 10);
+      return manualModeSet.has(mode);
+    }
+
+    function sendManualControlState(state, force) {
+      if (!armed) {
+        if (DEBUG) console.debug('❌ Manual control blocked: Vehicle not armed');
+        return;
+      }
+      if (ws?.readyState !== WebSocket.OPEN) {
+        if (DEBUG) console.debug('❌ Manual control blocked: WebSocket not open');
+        return;
+      }
+      if (!isManualMode() && !force) {
+        if (DEBUG) console.debug('❌ Manual control blocked: Not in manual mode');
+        return;
+      }
+      const now = Date.now();
+      if (!force && now - lastManualSendAt < 80) {
+        if (DEBUG) console.debug(`⏱️ Manual control rate-limited (${now - lastManualSendAt}ms since last)`);
+        return;
+      }
+
+      const command = {
+        header: { system_id: 255, component_id: 190, sequence: 0 },
+        message: {
+          type: 'MANUAL_CONTROL',
+          target: targetSystemId,
+          x: clamp(state.x, -1000, 1000),
+          y: clamp(state.y, -1000, 1000),
+          z: clamp(state.z, 0, 1000),
+          r: clamp(state.r, -1000, 1000),
+          buttons: state.buttons || 0
+        }
+      };
+      lastManualSendAt = now;
+      sendCommand(command);
+      if (DEBUG) {
+        console.debug('✅ Manual control sent:', command.message);
+      }
+    }
+
+    function handleCommandResponse(msg) {
+      if (!pendingCommands.has(msg.id)) return;
+      const entry = pendingCommands.get(msg.id);
+      pendingCommands.delete(msg.id);
+      if (DEBUG) {
+        console.debug('Command response:', { id: msg.id, success: msg.success, entry });
+      }
+      if (entry.type === 'arm' && msg.success) {
+        armed = entry.value === 1;
+        updateArmedState();
+      }
+    }
+
+    // Video streaming
+    let pc = null;
+    let videoWs = null;
+
+    els.btnVideoConnect.addEventListener('click', connectVideo);
+    els.btnVideoDisconnect.addEventListener('click', disconnectVideo);
+
+    async function connectVideo() {
+      const ip = document.getElementById('video-ip').value;
+      const port = document.getElementById('video-port').value;
+      
+      pc = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
+
+      pc.ontrack = (event) => {
+        els.videoPlayer.srcObject = event.streams[0];
+        els.videoOverlay.classList.add('hidden');
+        els.videoInfo.classList.remove('hidden');
+        els.videoStatus.textContent = 'Live';
+        els.videoStatus.className = 'status-badge online';
+      };
+
+      pc.addTransceiver('video', { direction: 'recvonly' });
+      pc.addTransceiver('audio', { direction: 'recvonly' });
+
+      videoWs = new WebSocket(`ws://${ip}:${port}`);
+
+      videoWs.onmessage = async (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'offer' && msg.sdp) {
+          await pc.setRemoteDescription(new RTCSessionDescription(msg));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          videoWs.send(JSON.stringify({ type: 'answer', sdp: answer.sdp }));
+        } else if (msg.type === 'ice' && msg.candidate) {
+          await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
+        }
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      setTimeout(() => {
+        if (videoWs.readyState === WebSocket.OPEN && pc.localDescription) {
+          videoWs.send(JSON.stringify({ type: 'offer', sdp: pc.localDescription.sdp }));
+        }
+      }, 500);
+
+      els.btnVideoConnect.classList.add('hidden');
+      els.btnVideoDisconnect.classList.remove('hidden');
+    }
+
+    function disconnectVideo() {
+      if (videoWs) videoWs.close();
+      if (pc) pc.close();
+      els.videoPlayer.srcObject = null;
+      els.videoOverlay.classList.remove('hidden');
+      els.videoInfo.classList.add('hidden');
+      els.videoStatus.textContent = 'Offline';
+      els.videoStatus.className = 'status-badge offline';
+      els.btnVideoConnect.classList.remove('hidden');
+      els.btnVideoDisconnect.classList.add('hidden');
+    }
+
+    // Gamepad support
+    function pollGamepad() {
+      const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+      const gp = gamepads.find(g => g !== null);
+      
+      if (gp) {
+        if (!gamepadConnected) {
+          gamepadConnected = true;
+          els.gamepadStatus.className = 'gamepad-status connected';
+          els.gamepadText.textContent = gp.id.split('(')[0].trim();
+          els.gamepadValues.classList.remove('hidden');
+        }
+        
+        const deadzone = 0.08;
+        const forward = applyDeadzone(-gp.axes[1], deadzone);
+        const lateral = applyDeadzone(gp.axes[0], deadzone);
+        const yaw = applyDeadzone(gp.axes[2], deadzone);
+        const throttle = gp.axes[3];
+
+        const x = Math.round(forward * 100);
+        const y = Math.round(lateral * 100);
+        const r = Math.round(yaw * 100);
+        const z = Math.round(((-throttle + 1) / 2) * 100);
+        
+        els.gamepadValues.innerHTML = `
+          <span>R:${x}</span>
+          <span>P:${y}</span>
+          <span>Y:${r}</span>
+          <span>T:${z}</span>
+        `;
+        console.log(x,y,r,z);
+        sendManualControlState({ ...manualState }, true);
+        // Send manual control if armed
+        if (armed) {
+          manualState.x = x * 10;
+          manualState.y = y * 10;
+          manualState.r = r * 10;
+          manualState.z = z * 10;
+          sendManualControlState({ ...manualState }, false);
+        }
+      } else {
+        if (gamepadConnected) {
+          gamepadConnected = false;
+          els.gamepadStatus.className = 'gamepad-status disconnected';
+          els.gamepadText.textContent = 'No gamepad detected';
+          els.gamepadValues.classList.add('hidden');
+        }
+      }
+      
+      requestAnimationFrame(pollGamepad);
+    }
+
+    // Initialize
+    connect();
+    pollGamepad();
+    
+    window.addEventListener('gamepadconnected', () => console.log('Gamepad connected'));
+    window.addEventListener('gamepaddisconnected', () => console.log('Gamepad disconnected'));
+  </script>
+</body>
+</html>
