@@ -3,164 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ROV Control Station</title>
+  <title>ROV Control // ABYSS</title>
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
     :root {
-      --bg-primary: #0a0a0f;
-      --bg-secondary: #12121a;
-      --bg-card: #1a1a25;
-      --text-primary: #ffffff;
-      --text-secondary: #a0a0b0;
-      --primary: #00d4ff;
-      --success: #00ff88;
-      --warning: #ffaa00;
-      --danger: #ff4444;
-      --border: #2a2a3a;
+      --bg-base: #030303;
+      --bg-surface: #0a0a0a;
+      --bg-surface-hover: #111111;
+      --border-color: rgba(255, 255, 255, 0.08);
+      
+      --text-main: #ffffff;
+      --text-muted: #666666;
+      
+      --accent: #ff4500; /* Deep orange */
+      --accent-glow: rgba(255, 69, 0, 0.4);
+      --success: #00ff66;
+      --warning: #ffcc00;
+      --danger: #ff3333;
+      
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --transition-smooth: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-fast: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    
+
+    * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-display);
       min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
     }
-    
-    .header {
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
+
+    /* Custom Cursor */
+    #cursor-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--text-main);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+    }
+    #cursor-ring {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, background 0.2s, border-color 0.2s;
+      mix-blend-mode: difference;
+    }
+    .hover-target:hover ~ #cursor-ring {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: transparent;
+    }
+
+    /* Header Nav */
+    header {
+      padding: 1.5rem 3vw;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      top: 0;
+      border-bottom: 1px solid var(--border-color);
+      position: relative;
       z-index: 100;
+      background: rgba(3,3,3,0.8);
+      backdrop-filter: blur(10px);
     }
     
     .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+      text-transform: uppercase;
       display: flex;
       align-items: center;
       gap: 1rem;
     }
-    
-    .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: rgba(0, 212, 255, 0.2);
-      border-radius: 8px;
+    .logo-mark {
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .top-status {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-    }
-    
-    .logo h1 {
-      font-size: 1.25rem;
-      font-weight: 600;
-    }
-    
-    .logo p {
+      gap: 2rem;
+      font-family: var(--font-mono);
       font-size: 0.75rem;
-      color: var(--text-secondary);
-    }
-    
-    .status-bar {
-      display: flex;
-      gap: 1.5rem;
-      align-items: center;
-    }
-    
-    .status-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
     }
     
     .status-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 500;
+      color: var(--text-main);
+      font-weight: 700;
     }
-    
-    .status-badge.online {
-      background: rgba(0, 255, 136, 0.2);
-      color: var(--success);
-    }
-    
-    .status-badge.offline {
-      background: rgba(255, 68, 68, 0.2);
-      color: var(--danger);
-    }
-    
-    .main-container {
+    .status-badge.online { color: var(--success); }
+    .status-badge.offline { color: var(--danger); }
+
+    /* Main Layout */
+    main {
+      flex: 1;
       display: grid;
-      grid-template-columns: 1fr 400px;
-      gap: 1.5rem;
-      padding: 1.5rem;
-      max-width: 1600px;
-      margin: 0 auto;
+      grid-template-columns: 1.2fr 1fr;
+      position: relative;
     }
-    
+
     @media (max-width: 1200px) {
-      .main-container {
-        grid-template-columns: 1fr;
-      }
+      main { grid-template-columns: 1fr; }
     }
-    
-    .left-column, .right-column {
+
+    /* Left Video Section */
+    .viewport-section {
+      position: relative;
+      border-right: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
-    }
-    
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      background: #000;
       overflow: hidden;
     }
-    
-    .card-header {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .card-title {
-      font-size: 1rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .card-content {
-      padding: 1.25rem;
-    }
-    
+
     .video-container {
-      aspect-ratio: 16/9;
-      background: #000;
+      flex: 1;
       position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
     
-    .video-container video {
+    #video-player {
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: cover;
+      opacity: 0.8;
+      mix-blend-mode: luminosity;
+      transition: opacity 1s;
     }
     
     .video-overlay {
@@ -170,573 +166,521 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.7);
-      color: var(--text-secondary);
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+      );
     }
-    
-    .video-overlay .icon {
-      font-size: 48px;
-      margin-bottom: 1rem;
+
+    .no-signal-text {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      letter-spacing: 4px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      animation: blink 2s infinite;
     }
-    
-    .video-info {
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .video-controls-panel {
       position: absolute;
-      top: 1rem;
-      left: 1rem;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      font-size: 0.875rem;
-    }
-    
-    .video-controls {
+      bottom: 2rem;
+      left: 2rem;
+      right: 2rem;
       display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
+      gap: 1rem;
+      background: rgba(10,10,10,0.6);
+      backdrop-filter: blur(12px);
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
     }
-    
-    .input-group {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    
-    .input-group input {
-      flex: 1;
-      padding: 0.5rem 0.75rem;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-primary);
-      font-size: 0.875rem;
-    }
-    
-    .btn {
-      padding: 0.625rem 1rem;
-      border-radius: 6px;
+
+    input.mono-input {
+      background: transparent;
       border: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
+      border-bottom: 1px solid var(--text-muted);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 0.5rem;
+      width: 120px;
+      transition: var(--transition-fast);
+    }
+    input.mono-input:focus {
+      outline: none;
+      border-bottom-color: var(--text-main);
+    }
+
+    /* Right Control Panel */
+    .control-panel {
+      padding: 3rem 4vw;
+      display: flex;
+      flex-direction: column;
+      gap: 4rem;
+      overflow-y: auto;
+      height: calc(100vh - 80px); /* header offset */
+    }
+    .control-panel::-webkit-scrollbar { display: none; }
+
+    /* Typography Hierarchy */
+    h2.section-title {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    h2.section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+    }
+
+    /* Buttons (Magnetic style) */
+    .btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 1rem 2rem;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition-smooth);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      z-index: 1;
     }
-    
-    .btn-primary {
-      background: var(--primary);
-      color: #000;
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 100%; left: 0; width: 100%; height: 100%;
+      background: var(--text-main);
+      transition: var(--transition-smooth);
+      z-index: -1;
     }
-    
-    .btn-primary:hover {
-      background: #33ddff;
+    .btn:hover::before { top: 0; }
+    .btn:hover { color: var(--bg-base); border-color: transparent; }
+
+    .btn-super {
+      font-size: 1.25rem;
+      font-family: var(--font-display);
+      font-weight: 700;
+      padding: 1.5rem;
+      width: 100%;
+      background: var(--bg-surface);
+      border-color: rgba(255,255,255,0.1);
     }
-    
-    .btn-danger {
-      background: var(--danger);
-      color: white;
-    }
-    
-    .btn-danger:hover {
-      background: #ff6666;
-    }
-    
-    .btn-success {
-      background: var(--success);
-      color: #000;
-    }
-    
-    .btn-success:hover {
-      background: #33ff99;
-    }
-    
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-    }
-    
-    .btn-outline:hover {
-      background: var(--bg-secondary);
-    }
-    
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .btn-lg {
-      padding: 1rem 2rem;
-      font-size: 1rem;
-      font-weight: 600;
-    }
-    
-    .telemetry-grid {
+    .btn-super.danger::before { background: var(--danger); }
+    .btn-super.success::before { background: var(--success); }
+
+    /* Telemetry Grid */
+    .data-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
+      gap: 1.5rem;
     }
     
-    .telemetry-item {
-      background: var(--bg-secondary);
-      padding: 1rem;
-      border-radius: 8px;
-    }
-    
-    .telemetry-label {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      margin-bottom: 0.25rem;
-    }
-    
-    .telemetry-value {
-      font-size: 1.5rem;
-      font-weight: 600;
-      font-family: 'Consolas', monospace;
-    }
-    
-    .telemetry-value.primary {
-      color: var(--primary);
-    }
-    
-    .telemetry-value.success {
-      color: var(--success);
-    }
-    
-    .telemetry-value.warning {
-      color: var(--warning);
-    }
-    
-    .telemetry-value.danger {
-      color: var(--danger);
-    }
-    
-    .attitude-canvas {
-      width: 100%;
-      height: 200px;
-      background: #0a0a0f;
-      border-radius: 8px;
-    }
-    
-    .control-section {
-      margin-bottom: 1.5rem;
-    }
-    
-    .control-section-title {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      margin-bottom: 0.5rem;
-    }
-    
-    .mode-select {
-      width: 100%;
-      padding: 0.625rem;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-primary);
-      font-size: 0.875rem;
-    }
-    
-    .alert {
-      padding: 0.75rem 1rem;
-      border-radius: 6px;
+    .data-item {
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 0.5rem;
-      font-size: 0.875rem;
+      position: relative;
+      padding: 1.5rem;
+      background: var(--bg-surface);
+      border: 1px solid transparent;
+      transition: var(--transition-fast);
+      transform-style: preserve-3d;
+      perspective: 1000px;
     }
     
-    .alert-warning {
-      background: rgba(255, 170, 0, 0.1);
-      border: 1px solid rgba(255, 170, 0, 0.3);
-      color: var(--warning);
+    .data-item:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--border-color);
+    }
+
+    .data-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     
-    .gamepad-status {
-      padding: 0.75rem;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .data-value {
+      font-size: 2.5rem;
+      font-weight: 300;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
     }
-    
-    .gamepad-status.connected {
-      background: rgba(0, 255, 136, 0.1);
-      border: 1px solid rgba(0, 255, 136, 0.3);
+    .data-value .unit {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-left: 0.25rem;
     }
-    
-    .gamepad-status.disconnected {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
+
+    /* Primary Accent Data */
+    .data-value.accent { color: var(--accent); }
+
+    /* Battery Bar Redesigned */
+    .battery-visual {
+      margin-top: 1rem;
+      height: 2px;
+      background: var(--border-color);
+      width: 100%;
+      position: relative;
     }
-    
-    .gamepad-values {
-      display: flex;
-      gap: 1rem;
-      font-family: monospace;
-      font-size: 0.75rem;
+    .battery-fill {
+      position: absolute;
+      top: 0; left: 0; height: 100%;
+      background: var(--success);
+      transition: width 1s cubic-bezier(0.85, 0, 0.15, 1);
+      box-shadow: 0 0 10px var(--success);
     }
-    
-    .gamepad-values span {
-      color: var(--primary);
-    }
-    
-    .manual-controls {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.5rem;
-    }
-    
-    .manual-controls button {
-      padding: 0.5rem;
-      font-size: 0.75rem;
-    }
-    
-    .battery-bar {
-      height: 8px;
-      background: var(--bg-secondary);
+
+    /* 2D Canvas Attitude Redesigned */
+    .attitude-wrap {
+      width: 100%;
+      aspect-ratio: 2/1;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
       border-radius: 4px;
       overflow: hidden;
-      margin-top: 0.5rem;
+      position: relative;
     }
-    
-    .battery-fill {
+    #attitude-canvas {
+      width: 100%;
       height: 100%;
-      border-radius: 4px;
-      transition: width 0.3s;
+      display: block;
     }
-    
-    .battery-fill.high {
-      background: var(--success);
+    /* Simple overlay crosshair */
+    .attitude-wrap::after {
+      content: '+';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      pointer-events: none;
     }
-    
-    .battery-fill.medium {
-      background: var(--warning);
+
+    /* Select Dropdown */
+    .custom-select {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--text-main);
+      color: var(--text-main);
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 500;
+      padding: 1rem 0;
+      appearance: none;
+      transition: var(--transition-fast);
     }
-    
-    .battery-fill.low {
-      background: var(--danger);
+    .custom-select:focus { outline: none; border-color: var(--accent); }
+    .custom-select option { background: var(--bg-base); color: var(--text-main); }
+
+    /* Gamepad Status Minimal */
+    .gamepad-box {
+      border-left: 2px solid var(--danger);
+      padding-left: 1.5rem;
+      font-family: var(--font-mono);
     }
+    .gamepad-box.connected { border-left-color: var(--success); }
+    .gamepad-box p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .gamepad-box #gamepad-text { color: var(--text-main); font-weight: bold; }
     
-    .footer {
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border);
+    .hidden { display: none !important; }
+
+    /* Footer */
+    footer {
+      position: fixed;
+      bottom: 0; right: 0;
       padding: 1rem 2rem;
-      text-align: center;
-      color: var(--text-secondary);
-      font-size: 0.875rem;
-    }
-    
-    .footer span {
-      margin: 0 1rem;
-    }
-    
-    .hidden {
-      display: none !important;
-    }
-    
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: var(--bg-primary);
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: #3a3a4a;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      background: rgba(3,3,3,0.9);
+      backdrop-filter: blur(5px);
+      border-top-left-radius: 8px;
+      border-top: 1px solid var(--border-color);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      gap: 1.5rem;
     }
   </style>
 </head>
 <body>
-  <header class="header">
+  
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <header>
     <div class="logo">
-      <div class="logo-icon">🌊</div>
-      <div>
-        <h1>ROV Control Station</h1>
-        <p>BlueOS / ArduSub Interface</p>
-      </div>
+      <div class="logo-mark"></div>
+      ABYSS COMMAND
     </div>
-    <div class="status-bar">
-      <div class="status-item">
-        <span>🔌</span>
-        <span>Backend:</span>
-        <span id="backend-status" class="status-badge offline">Checking...</span>
-      </div>
-      <div class="status-item">
-        <span>📡</span>
-        <span>MAVLink:</span>
-        <span id="mavlink-status" class="status-badge offline">Offline</span>
-      </div>
-      <div class="status-item">
-        <span>⚡</span>
-        <span id="message-rate">0 msg/s</span>
-      </div>
-      <div class="status-item">
-        <span>🔋</span>
-        <span id="battery-indicator">--%</span>
-      </div>
+    <div class="top-status">
+      <div>Backend: <span id="backend-status" class="status-badge offline">OFFLINE</span></div>
+      <div>MAVLink: <span id="mavlink-status" class="status-badge offline">OFFLINE</span></div>
+      <div>Rate: <span id="message-rate">0/s</span></div>
+      <div>Bat: <span id="battery-indicator" class="status-badge">--%</span></div>
     </div>
   </header>
 
-  <main class="main-container">
-    <div class="left-column">
-      <!-- Video Feed -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <span>📹</span>
-            <span>Video Feed</span>
-          </div>
-          <span id="video-status" class="status-badge offline">Offline</span>
+  <main>
+    <!-- LEFT: VIDEO ABYSS -->
+    <section class="viewport-section">
+      <div class="video-container">
+        <video id="video-player" class="hover-target" autoplay playsinline muted></video>
+        <div id="video-overlay" class="video-overlay">
+          <div class="no-signal-text">AWAITING FEED</div>
         </div>
-        <div class="card-content">
-          <div class="input-group">
-            <input type="text" id="video-ip" placeholder="BlueOS IP" value="192.168.2.2">
-            <input type="text" id="video-port" placeholder="Port" value="6020" style="width: 80px;">
+        
+        <div class="video-controls-panel">
+          <div>
+            <span style="font-family:var(--font-mono);font-size:10px;color:gray;">HOST</span><br>
+            <input type="text" id="video-ip" class="mono-input hover-target" value="192.168.2.2">
           </div>
-          <div class="video-container">
-            <video id="video-player" autoplay playsinline muted></video>
-            <div id="video-overlay" class="video-overlay">
-              <div class="icon">📺</div>
-              <p>No video signal</p>
-            </div>
-            <div id="video-info" class="video-info hidden">
-              <span style="color: #00ff88;">●</span>
-              <span id="stream-name">Live</span>
-            </div>
+          <div>
+            <span style="font-family:var(--font-mono);font-size:10px;color:gray;">PORT</span><br>
+            <input type="text" id="video-port" class="mono-input hover-target" value="6020">
           </div>
-          <div class="video-controls">
-            <button id="btn-video-connect" class="btn btn-primary">Start Stream</button>
-            <button id="btn-video-disconnect" class="btn btn-danger hidden">Stop Stream</button>
+          <button id="btn-video-connect" class="btn hover-target" style="margin-left:auto;">[ INITIATE ]</button>
+          <button id="btn-video-disconnect" class="btn hover-target hidden" style="margin-left:auto;">[ TERMINATE ]</button>
+          <div id="video-info" class="hidden" style="align-self: center; margin-left: 1rem;">
+             <span id="video-status" style="color:var(--success); font-family:var(--font-mono); font-size:12px;">LIVE</span>
+             <span id="stream-name" class="hidden"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: COMMAND & CONTROL -->
+    <section class="control-panel">
+      
+      <!-- Primary Core -->
+      <div>
+        <h2 class="section-title">01 // CORE STATUS</h2>
+        
+        <button id="btn-arm" class="btn btn-super success hover-target">INITIALIZE THRUSTERS</button>
+        <button id="btn-disarm" class="btn btn-super danger hidden hover-target">SUSPEND OPERATIONS</button>
+        <div id="armed-warning" class="hidden" style="color:var(--danger); font-family:var(--font-mono); margin-top:1rem; font-size:0.8rem; letter-spacing:1px; animation: blink 1s infinite;">
+          >> CAUTION: VEHICLE IS ARMED AND ACTIVE
+        </div>
+
+        <div style="margin-top: 2rem;">
+          <p style="font-family:var(--font-mono);font-size:10px;color:gray;margin-bottom:0.5rem;">FLIGHT MODE DIRECTIVE</p>
+          <select id="flight-mode" class="custom-select hover-target">
+            <option value="9">MANUAL_OVERRIDE</option>
+            <option value="0">STABILIZE_CORE</option>
+            <option value="2">DEPTH_LOCK</option>
+            <option value="7">POSITION_HOLD</option>
+            <option value="6">SURFACE_RETURN</option>
+          </select>
+          <p id="mode-description" style="font-family:var(--font-mono); font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
+            Direct control without stabilization
+          </p>
+        </div>
+      </div>
+
+      <!-- Telemetry Array -->
+      <div>
+        <h2 class="section-title">02 // SENSOR ARRAY <span id="telemetry-status" style="margin-left:auto; font-size:9px; color:var(--text-muted);">DISCONNECTED</span></h2>
+        
+        <div class="data-grid">
+          <div class="data-item tilt-card">
+            <span class="data-label">Sys Mode</span>
+            <div id="tm-flight-mode" class="data-value accent">--</div>
+            <div id="tm-system-status" style="font-family:var(--font-mono); font-size:10px; color:gray; position:absolute; bottom:10px; right:10px;">--</div>
+          </div>
+          <div class="data-item tilt-card">
+            <span class="data-label">Depth Rating</span>
+            <div class="data-value"><span id="tm-depth">--</span><span class="unit">M</span></div>
+          </div>
+          <div class="data-item tilt-card">
+            <span class="data-label">Atm. Pressure</span>
+            <div class="data-value"><span id="tm-pressure">--</span><span class="unit">hPa</span></div>
+          </div>
+          <div class="data-item tilt-card">
+            <span class="data-label">Core Temp</span>
+            <div class="data-value"><span id="tm-temp">--</span><span class="unit">°C</span></div>
           </div>
         </div>
       </div>
 
-      <!-- Attitude Indicator -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <span>🧭</span>
-            <span>Attitude Indicator</span>
+      <!-- Energy -->
+      <div>
+        <h2 class="section-title">03 // ENERGY GRID</h2>
+        <div class="data-grid">
+          <div class="data-item tilt-card">
+            <span class="data-label">Voltage Source</span>
+            <div class="data-value"><span id="tm-voltage">--</span><span class="unit">V</span></div>
+          </div>
+          <div class="data-item tilt-card">
+            <span class="data-label">Current Draw</span>
+            <div class="data-value"><span id="tm-current">--</span><span class="unit">A</span></div>
           </div>
         </div>
-        <div class="card-content">
-          <canvas id="attitude-canvas" class="attitude-canvas" width="600" height="200"></canvas>
-          <div class="telemetry-grid" style="margin-top: 1rem;">
-            <div class="telemetry-item">
-              <div class="telemetry-label">Roll</div>
-              <div id="attitude-roll" class="telemetry-value">--°</div>
-            </div>
-            <div class="telemetry-item">
-              <div class="telemetry-label">Pitch</div>
-              <div id="attitude-pitch" class="telemetry-value">--°</div>
-            </div>
-            <div class="telemetry-item">
-              <div class="telemetry-label">Yaw</div>
-              <div id="attitude-yaw" class="telemetry-value primary">--°</div>
-            </div>
-            <div class="telemetry-item">
-              <div class="telemetry-label">Heading</div>
-              <div id="attitude-heading" class="telemetry-value primary">--°</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="right-column">
-      <!-- Vehicle Control -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <span>⚙️</span>
-            <span>Vehicle Control</span>
-          </div>
-        </div>
-        <div class="card-content">
-          <!-- Arm/Disarm -->
-          <div class="control-section">
-            <div class="control-section-title">Vehicle State</div>
-            <button id="btn-arm" class="btn btn-success btn-lg" style="width: 100%;">
-              <span>⚡</span>
-              <span>ARM</span>
-            </button>
-            <button id="btn-disarm" class="btn btn-danger btn-lg hidden" style="width: 100%;">
-              <span>🛑</span>
-              <span>DISARM</span>
-            </button>
-            <div id="armed-warning" class="alert alert-warning hidden" style="margin-top: 0.5rem;">
-              <span>⚠️</span>
-              <span>Vehicle is ARMED. Motors will spin on input.</span>
-            </div>
-          </div>
-
-          <!-- Flight Mode -->
-          <div class="control-section">
-            <div class="control-section-title">Flight Mode</div>
-            <select id="flight-mode" class="mode-select">
-              <option value="9">MANUAL</option>
-              <option value="0">STABILIZE</option>
-              <option value="2">DEPTH HOLD</option>
-              <option value="7">POSHOLD</option>
-              <option value="6">SURFACE</option>
-            </select>
-            <p id="mode-description" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">
-              Direct control without stabilization
-            </p>
-          </div>
-
-          <!-- Gamepad Status -->
-          <div class="control-section">
-            <div class="control-section-title">Gamepad Control</div>
-            <div id="gamepad-status" class="gamepad-status disconnected">
-              <div>
-                <span>🎮</span>
-                <span id="gamepad-text">No gamepad detected</span>
-              </div>
-              <div id="gamepad-values" class="gamepad-values hidden">
-                <span>R:0</span>
-                <span>P:0</span>
-                <span>Y:0</span>
-                <span>T:0</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Manual Controls -->
-          <div id="manual-controls" class="control-section hidden">
-            <div class="control-section-title">Manual Control Test</div>
-            <div class="manual-controls">
-              <button class="btn btn-outline" data-axis="x" data-value="500">Forward</button>
-              <button class="btn btn-outline" data-axis="x" data-value="-500">Back</button>
-              <button class="btn btn-outline" data-axis="y" data-value="-500">Left</button>
-              <button class="btn btn-outline" data-axis="y" data-value="500">Right</button>
-            </div>
-            <div class="manual-controls" style="margin-top: 0.5rem;">
-              <button class="btn btn-outline" data-axis="z" data-value="800">Ascend</button>
-              <button class="btn btn-outline" data-axis="z" data-value="200">Descend</button>
-            </div>
-          </div>
-
-          <!-- Emergency -->
-          <div id="emergency-section" class="control-section hidden">
-            <div class="control-section-title">Emergency</div>
-            <button id="btn-emergency" class="btn btn-danger" style="width: 100%;">
-              <span>🚨</span>
-              <span>EMERGENCY DISARM</span>
-            </button>
-          </div>
+        <div style="margin-top: 1rem;">
+           <span style="font-family:var(--font-mono);font-size:12px;display:flex;justify-content:space-between;">
+              <span>RESERVE CAPACITY</span>
+              <span id="tm-battery-pct">--%</span>
+           </span>
+           <div class="battery-visual">
+             <div id="battery-fill" class="battery-fill" style="width: 0%;"></div>
+           </div>
         </div>
       </div>
 
-      <!-- Telemetry -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <span>📊</span>
-            <span>Telemetry</span>
-          </div>
-          <span id="telemetry-status" class="status-badge offline">Disconnected</span>
+      <!-- Dynamics (Reverting to 2D Canvas) -->
+      <div>
+        <h2 class="section-title">04 // KINEMATICS</h2>
+        <div class="attitude-wrap">
+          <canvas id="attitude-canvas" width="600" height="300"></canvas>
         </div>
-        <div class="card-content">
-          <div class="telemetry-grid">
-            <div class="telemetry-item">
-              <div class="telemetry-label">Flight Mode</div>
-              <div id="tm-flight-mode" class="telemetry-value primary">--</div>
-            </div>
-            <div class="telemetry-item">
-              <div class="telemetry-label">System Status</div>
-              <div id="tm-system-status" class="telemetry-value">--</div>
-            </div>
-            <div class="telemetry-item">
-              <div class="telemetry-label">Depth</div>
-              <div id="tm-depth" class="telemetry-value primary">-- m</div>
-            </div>
-            <div class="telemetry-item">
-              <div class="telemetry-label">Pressure</div>
-              <div id="tm-pressure" class="telemetry-value">-- hPa</div>
-            </div>
-            <div class="telemetry-item">
-              <div class="telemetry-label">Battery Voltage</div>
-              <div id="tm-voltage" class="telemetry-value">-- V</div>
-            </div>
-            <div class="telemetry-item">
-              <div class="telemetry-label">Battery %</div>
-              <div id="tm-battery-pct" class="telemetry-value success">--%</div>
-            </div>
-          </div>
-          <div class="battery-bar">
-            <div id="battery-fill" class="battery-fill high" style="width: 0%;"></div>
-          </div>
-          <div class="telemetry-grid" style="margin-top: 1rem;">
-            <div class="telemetry-item">
-              <div class="telemetry-label">Water Temp</div>
-              <div id="tm-temp" class="telemetry-value">-- °C</div>
-            </div>
-            <div class="telemetry-item">
-              <div class="telemetry-label">Current</div>
-              <div id="tm-current" class="telemetry-value">-- A</div>
-            </div>
-          </div>
+        <div style="display:flex; justify-content:space-between; margin-top:1rem; font-family:var(--font-mono); font-size:14px;">
+          <div>R: <span id="attitude-roll">--°</span></div>
+          <div>P: <span id="attitude-pitch">--°</span></div>
+          <div>Y: <span id="attitude-yaw" style="color:var(--accent)">--°</span></div>
+          <div class="hidden" id="attitude-heading"></div> <!-- Hidden but preserved for JS compatibility -->
         </div>
       </div>
-    </div>
+
+      <!-- Hardware Interfaces -->
+      <div style="margin-bottom: 5rem;">
+        <h2 class="section-title">05 // PERIPHERALS</h2>
+        
+        <div id="gamepad-status" class="gamepad-box">
+          <p>GAMEPAD LINK</p>
+          <div id="gamepad-text">SEARCHING FOR INPUT...</div>
+          <div id="gamepad-values" class="hidden" style="margin-top:10px; display:flex; gap:10px; font-size:10px;"></div>
+        </div>
+
+        <div id="manual-controls" class="hidden" style="margin-top:2rem;">
+          <p style="font-family:var(--font-mono);font-size:10px;color:gray;margin-bottom:0.5rem;">KEYBOARD OVERRIDE</p>
+          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;">
+            <button class="btn hover-target" data-axis="x" data-value="500">FWD</button>
+            <button class="btn hover-target" data-axis="x" data-value="-500">BCK</button>
+            <button class="btn hover-target" data-axis="y" data-value="-500">LFT</button>
+            <button class="btn hover-target" data-axis="y" data-value="500">RGT</button>
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; margin-top:10px;">
+            <button class="btn hover-target" data-axis="z" data-value="800">ASCEND</button>
+            <button class="btn hover-target" data-axis="z" data-value="200">DESCEND</button>
+          </div>
+        </div>
+
+        <div id="emergency-section" class="hidden" style="margin-top:3rem;">
+           <button id="btn-emergency" class="btn btn-super danger hover-target" style="background:#ff3333; color:#000;">!! EMERGENCY KILL !!</button>
+        </div>
+      </div>
+
+    </section>
   </main>
 
-  <footer class="footer">
-    <span>ROV Control Station v1.0.0</span>
-    <span>|</span>
-    <span id="footer-backend">Backend: --</span>
-    <span>|</span>
-    <span id="footer-mavlink">MAVLink: --</span>
-    <span>|</span>
-    <span id="footer-rate">Rate: -- msg/s</span>
+  <footer>
+    <span id="footer-backend"></span>
+    <span id="footer-mavlink"></span>
+    <span id="footer-rate"></span>
   </footer>
 
+  <!-- ULTRA-MODERN INTERACTIONS & CURSOR JS -->
+  <script>
+    // Custom Cursor Logic
+    const cursorDot = document.getElementById('cursor-dot');
+    const cursorRing = document.getElementById('cursor-ring');
+    let mouseX = 0, mouseY = 0;
+    let ringX = 0, ringY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursorDot.style.left = mouseX + 'px';
+      cursorDot.style.top = mouseY + 'px';
+    });
+
+    function animateCursorTitle() {
+      // Smooth follow for the ring
+      let dx = mouseX - ringX;
+      let dy = mouseY - ringY;
+      ringX += dx * 0.2;
+      ringY += dy * 0.2;
+      cursorRing.style.left = ringX + 'px';
+      cursorRing.style.top = ringY + 'px';
+      requestAnimationFrame(animateCursorTitle);
+    }
+    animateCursorTitle();
+
+    // 3D Tilt Effect on Cards
+    const tiltCards = document.querySelectorAll('.tilt-card');
+    tiltCards.forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = ((y - centerY) / centerY) * -10;
+        const rotateY = ((x - centerX) / centerX) * 10;
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg)`;
+      });
+    });
+
+    // Magnetic Buttons
+    const btns = document.querySelectorAll('.btn');
+    btns.forEach(btn => {
+      btn.addEventListener('mousemove', (e) => {
+        const rect = btn.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width/2;
+        const y = e.clientY - rect.top - rect.height/2;
+        btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.transform = `translate(0px, 0px)`;
+      });
+    });
+  </script>
+
+  <!-- ORIGINAL BACKEND INTEGRATION LOGIC (Preserved IDs, 2D Canvas styled for Abyss) -->
   <script>
     // Flight mode descriptions
     const modeDescriptions = {
-      9: 'Direct control without stabilization',
-      0: 'Self-leveling when sticks are centered',
-      2: 'Maintains current depth automatically',
-      7: 'Holds position and heading',
-      6: 'Returns to surface automatically'
+      9: 'Direct manual input stream',
+      0: 'Auto-leveling enabled',
+      2: 'Z-Axis depth locked',
+      7: 'GPS positional lock active',
+      6: 'Emergency surface sequence'
     };
 
     const flightModeNames = {
-      0: 'STABILIZE',
-      1: 'ACRO',
-      2: 'DEPTH HOLD',
-      3: 'AUTO',
-      4: 'GUIDED',
-      5: 'CIRCLE',
-      6: 'SURFACE',
-      7: 'POSHOLD',
-      9: 'MANUAL',
-      99: 'UNKNOWN'
+      0: 'STABILIZE', 1: 'ACRO', 2: 'DEPTH HOLD', 3: 'AUTO', 4: 'GUIDED',
+      5: 'CIRCLE', 6: 'SURFACE', 7: 'POSHOLD', 9: 'MANUAL', 99: 'UNKNOWN'
     };
 
     const systemStatusNames = {
-      0: 'UNINIT',
-      1: 'BOOT',
-      2: 'CALIBRATING',
-      3: 'STANDBY',
-      4: 'ACTIVE',
-      5: 'CRITICAL',
-      6: 'EMERGENCY',
-      7: 'POWEROFF',
-      8: 'TERMINATION'
+      0: 'UNINIT', 1: 'BOOT', 2: 'CALIBRATING', 3: 'STANDBY', 4: 'ACTIVE',
+      5: 'CRITICAL', 6: 'EMERGENCY', 7: 'POWEROFF', 8: 'TERMINATION'
     };
 
     const DEBUG = true;
@@ -748,7 +692,6 @@
     let messageCount = 0;
     let lastRateCalc = Date.now();
     let gamepadConnected = false;
-    let manualControlInterval = null;
     let currentMode = 0;
     let targetSystemId = 1;
     let targetComponentId = 1;
@@ -758,7 +701,7 @@
     const manualModeSet = new Set([9, 0]);
     let lastHeartbeat = { armed: null, mode: null, systemStatus: null };
 
-    // DOM Elements
+    // DOM Elements (All original IDs mapping correctly)
     const els = {
       backendStatus: document.getElementById('backend-status'),
       mavlinkStatus: document.getElementById('mavlink-status'),
@@ -794,7 +737,6 @@
       ws = new WebSocket(wsUrl);
       
       ws.onopen = () => {
-        console.log('Connected to backend');
         updateBackendStatus(true);
       };
       
@@ -802,20 +744,13 @@
         try {
           const msg = JSON.parse(event.data);
           handleMessage(msg);
-        } catch (err) {
-          console.error('Error parsing message:', err);
-        }
+        } catch (err) {}
       };
       
       ws.onclose = () => {
-        console.log('Disconnected from backend');
         updateBackendStatus(false);
         updateMAVLinkStatus(false);
         setTimeout(connect, 3000);
-      };
-      
-      ws.onerror = (err) => {
-        console.error('WebSocket error:', err);
       };
     }
 
@@ -834,9 +769,7 @@
           updateTelemetryDisplay();
           break;
         case 'connection':
-          if (msg.source === 'mavlink') {
-            updateMAVLinkStatus(msg.status === 'connected');
-          }
+          if (msg.source === 'mavlink') updateMAVLinkStatus(msg.status === 'connected');
           break;
         case 'command_response':
           handleCommandResponse(msg);
@@ -846,18 +779,15 @@
 
     // Update backend status
     function updateBackendStatus(connected) {
-      els.backendStatus.textContent = connected ? 'Online' : 'Offline';
+      els.backendStatus.textContent = connected ? 'ONLINE' : 'OFFLINE';
       els.backendStatus.className = 'status-badge ' + (connected ? 'online' : 'offline');
-      document.getElementById('footer-backend').textContent = 'Backend: ' + (connected ? 'Online' : 'Offline');
     }
 
     // Update MAVLink status
     function updateMAVLinkStatus(connected) {
-      els.mavlinkStatus.textContent = connected ? 'Online' : 'Offline';
+      els.mavlinkStatus.textContent = connected ? 'ACTV' : 'OFFLINE';
       els.mavlinkStatus.className = 'status-badge ' + (connected ? 'online' : 'offline');
-      els.telemetryStatus.textContent = connected ? 'Connected' : 'Disconnected';
-      els.telemetryStatus.className = 'status-badge ' + (connected ? 'online' : 'offline');
-      document.getElementById('footer-mavlink').textContent = 'MAVLink: ' + (connected ? 'Connected' : 'Disconnected');
+      els.telemetryStatus.textContent = connected ? 'LIVE' : 'DISC';
     }
 
     // Update message rate
@@ -866,8 +796,7 @@
       const elapsed = (now - lastRateCalc) / 1000;
       if (elapsed >= 1) {
         const rate = Math.round(messageCount / elapsed);
-        els.messageRate.textContent = rate + ' msg/s';
-        document.getElementById('footer-rate').textContent = 'Rate: ' + rate + ' msg/s';
+        els.messageRate.textContent = rate + '/s';
         messageCount = 0;
         lastRateCalc = now;
       }
@@ -879,74 +808,47 @@
       const press = telemetry.pressure;
       const bat = telemetry.battery;
       const hb = telemetry.heartbeat;
-      const vfr = telemetry.vfr_hud;
 
       // Attitude
       if (att) {
         document.getElementById('attitude-roll').textContent = att.roll.toFixed(1) + '°';
         document.getElementById('attitude-pitch').textContent = att.pitch.toFixed(1) + '°';
         document.getElementById('attitude-yaw').textContent = att.yaw.toFixed(0) + '°';
-        drawAttitudeIndicator(att.roll, att.pitch, att.yaw);
-      }
-
-      // Heading
-      if (vfr) {
-        document.getElementById('attitude-heading').textContent = vfr.heading.toFixed(0) + '°';
-      } else if (att) {
-        document.getElementById('attitude-heading').textContent = att.yaw.toFixed(0) + '°';
+        drawAttitudeIndicatorAbyss(att.roll, att.pitch, att.yaw);
       }
 
       // Pressure/Depth
       if (press) {
-        document.getElementById('tm-depth').textContent = press.depth.toFixed(2) + ' m';
-        document.getElementById('tm-pressure').textContent = press.pressure.toFixed(1) + ' hPa';
-        document.getElementById('tm-temp').textContent = press.temperature.toFixed(1) + ' °C';
+        document.getElementById('tm-depth').textContent = press.depth.toFixed(1);
+        document.getElementById('tm-pressure').textContent = press.pressure.toFixed(0);
+        document.getElementById('tm-temp').textContent = press.temperature.toFixed(1);
       }
 
       // Battery
       if (bat) {
-        document.getElementById('tm-voltage').textContent = bat.voltage.toFixed(2) + ' V';
+        document.getElementById('tm-voltage').textContent = bat.voltage.toFixed(1);
         document.getElementById('tm-battery-pct').textContent = bat.remaining + '%';
-        document.getElementById('tm-current').textContent = bat.current.toFixed(2) + ' A';
+        document.getElementById('tm-current').textContent = bat.current.toFixed(1);
         els.batteryIndicator.textContent = bat.remaining + '%';
-        
         els.batteryFill.style.width = bat.remaining + '%';
-        els.batteryFill.className = 'battery-fill ' + 
-          (bat.remaining > 50 ? 'high' : bat.remaining > 25 ? 'medium' : 'low');
+        els.batteryFill.style.background = bat.remaining > 50 ? 'var(--success)' : bat.remaining > 20 ? 'var(--warning)' : 'var(--danger)';
       }
 
       // Heartbeat
       if (hb) {
         armed = hb.armed;
         currentMode = Number.isFinite(hb.flightMode) ? hb.flightMode : currentMode;
-        if (Number.isFinite(hb.systemId)) {
-          targetSystemId = hb.systemId;
-        }
-        if (Number.isFinite(hb.componentId)) {
-          targetComponentId = hb.componentId;
-        }
+        if (Number.isFinite(hb.systemId)) targetSystemId = hb.systemId;
+        if (Number.isFinite(hb.componentId)) targetComponentId = hb.componentId;
+        
         document.getElementById('tm-flight-mode').textContent = flightModeNames[hb.flightMode] || 'UNKNOWN';
         document.getElementById('tm-system-status').textContent = systemStatusNames[hb.systemStatus] || 'UNKNOWN';
         updateArmedState();
-
-        if (DEBUG) {
-          const modeChanged = lastHeartbeat.mode !== hb.flightMode;
-          const armedChanged = lastHeartbeat.armed !== hb.armed;
-          const statusChanged = lastHeartbeat.systemStatus !== hb.systemStatus;
-          if (modeChanged || armedChanged || statusChanged) {
-            console.debug('Heartbeat update:', {
-              armed: hb.armed,
-              flightMode: hb.flightMode,
-              systemStatus: hb.systemStatus
-            });
-            lastHeartbeat = { armed: hb.armed, mode: hb.flightMode, systemStatus: hb.systemStatus };
-          }
-        }
       }
     }
 
-    // Draw attitude indicator
-    function drawAttitudeIndicator(roll, pitch, yaw) {
+    // Custom 2D Attitude Indicator for The Abyss Theme
+    function drawAttitudeIndicatorAbyss(roll, pitch, yaw) {
       const canvas = els.attitudeCanvas;
       const ctx = canvas.getContext('2d');
       const width = canvas.width;
@@ -959,43 +861,71 @@
       ctx.translate(centerX, centerY);
       ctx.rotate((-roll * Math.PI) / 180);
 
-      // Sky
-      const skyGrad = ctx.createLinearGradient(0, -height, 0, 0);
-      skyGrad.addColorStop(0, '#1a3a5c');
-      skyGrad.addColorStop(1, '#2d5a87');
-      ctx.fillStyle = skyGrad;
-      ctx.fillRect(-width, -height, width * 2, height);
-
-      // Ground
-      const groundGrad = ctx.createLinearGradient(0, 0, 0, height);
-      groundGrad.addColorStop(0, '#4a3728');
-      groundGrad.addColorStop(1, '#2d1f14');
-      ctx.fillStyle = groundGrad;
+      // Pitch Offset
       const pitchOffset = (pitch / 90) * (height / 2);
+
+      // Sky (Pitch Black to Deep Blue)
+      const skyGrad = ctx.createLinearGradient(0, -height, 0, 0);
+      skyGrad.addColorStop(0, '#02050a');
+      skyGrad.addColorStop(1, '#0a101a');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(-width, -height, width * 2, height + pitchOffset);
+
+      // Ground (Dark Grid/Abyss)
+      const groundGrad = ctx.createLinearGradient(0, pitchOffset, 0, height);
+      groundGrad.addColorStop(0, '#110500');
+      groundGrad.addColorStop(1, '#050200');
+      ctx.fillStyle = groundGrad;
       ctx.fillRect(-width, pitchOffset, width * 2, height);
 
-      // Horizon
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
+      // Bright Orange Horizon Line
+      ctx.strokeStyle = '#ff4500';
+      ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(-width, pitchOffset);
       ctx.lineTo(width, pitchOffset);
       ctx.stroke();
+      
+      // Pitch ladder markings
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      for(let i=-60; i<=60; i+=10) {
+        if(i===0) continue;
+        let pY = pitchOffset + (i / 90) * (height/2);
+        ctx.beginPath();
+        let lW = (i%20===0) ? 60 : 30; // wider lines every 20 deg
+        ctx.moveTo(-lW, pY);
+        ctx.lineTo(lW, pY);
+        ctx.stroke();
+        
+        if (i%20===0) {
+          ctx.fillStyle = 'rgba(255,255,255,0.5)';
+          ctx.font = '10px JetBrains Mono';
+          ctx.fillText(Math.abs(i), lW + 5, pY + 3);
+          ctx.fillText(Math.abs(i), -lW - 15, pY + 3);
+        }
+      }
 
       ctx.restore();
 
-      // Aircraft symbol
-      ctx.strokeStyle = '#ff0';
+      // Static Aircraft symbol (White/Orange mix)
+      ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(centerX - 50, centerY);
-      ctx.lineTo(centerX - 15, centerY);
-      ctx.moveTo(centerX + 50, centerY);
-      ctx.lineTo(centerX + 15, centerY);
+      // Left wing
+      ctx.moveTo(centerX - 80, centerY);
+      ctx.lineTo(centerX - 25, centerY);
+      ctx.lineTo(centerX - 25, centerY + 15);
+      // Right wing
+      ctx.moveTo(centerX + 80, centerY);
+      ctx.lineTo(centerX + 25, centerY);
+      ctx.lineTo(centerX + 25, centerY + 15);
+      // Center dot
       ctx.stroke();
+      
+      ctx.fillStyle = '#ff4500';
       ctx.beginPath();
-      ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#ff0';
+      ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -1022,13 +952,7 @@
       if (ws?.readyState === WebSocket.OPEN) {
         const id = Date.now();
         ws.send(JSON.stringify({ type: 'command', id, data: command }));
-        if (DEBUG) {
-          console.debug('Command sent:', command.message.type, { id, command });
-        }
         return id;
-      }
-      if (DEBUG) {
-        console.debug('Command dropped: WebSocket not open');
       }
       return null;
     }
@@ -1052,9 +976,7 @@
         }
       };
       const id = await sendCommand(command);
-      if (id) {
-        pendingCommands.set(id, { type: 'arm', value: arm });
-      }
+      if (id) pendingCommands.set(id, { type: 'arm', value: arm });
     }
 
     // Flight mode
@@ -1073,9 +995,7 @@
         }
       };
       await sendCommand(command);
-      if (!manualModeSet.has(mode)) {
-        sendManualControlState({ ...manualState, x: 0, y: 0, r: 0, z: 500 }, true);
-      }
+      if (!manualModeSet.has(mode)) sendManualControlState({ ...manualState, x: 0, y: 0, r: 0, z: 500 }, true);
     });
 
     // Manual controls
@@ -1102,37 +1022,18 @@
       sendManualControlState({ ...manualState }, force);
     }
 
-    function clamp(value, min, max) {
-      return Math.min(max, Math.max(min, value));
-    }
-
-    function applyDeadzone(value, deadzone) {
-      return Math.abs(value) < deadzone ? 0 : value;
-    }
-
+    function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
+    function applyDeadzone(value, deadzone) { return Math.abs(value) < deadzone ? 0 : value; }
     function isManualMode() {
       const mode = Number.isFinite(currentMode) ? currentMode : parseInt(els.flightMode.value, 10);
       return manualModeSet.has(mode);
     }
 
     function sendManualControlState(state, force) {
-      if (!armed) {
-        if (DEBUG) console.debug('❌ Manual control blocked: Vehicle not armed');
-        return;
-      }
-      if (ws?.readyState !== WebSocket.OPEN) {
-        if (DEBUG) console.debug('❌ Manual control blocked: WebSocket not open');
-        return;
-      }
-      if (!isManualMode() && !force) {
-        if (DEBUG) console.debug('❌ Manual control blocked: Not in manual mode');
-        return;
-      }
+      if (!armed || ws?.readyState !== WebSocket.OPEN) return;
+      if (!isManualMode() && !force) return;
       const now = Date.now();
-      if (!force && now - lastManualSendAt < 80) {
-        if (DEBUG) console.debug(`⏱️ Manual control rate-limited (${now - lastManualSendAt}ms since last)`);
-        return;
-      }
+      if (!force && now - lastManualSendAt < 80) return;
 
       const command = {
         header: { system_id: 255, component_id: 190, sequence: 0 },
@@ -1148,18 +1049,12 @@
       };
       lastManualSendAt = now;
       sendCommand(command);
-      if (DEBUG) {
-        console.debug('✅ Manual control sent:', command.message);
-      }
     }
 
     function handleCommandResponse(msg) {
       if (!pendingCommands.has(msg.id)) return;
       const entry = pendingCommands.get(msg.id);
       pendingCommands.delete(msg.id);
-      if (DEBUG) {
-        console.debug('Command response:', { id: msg.id, success: msg.success, entry });
-      }
       if (entry.type === 'arm' && msg.success) {
         armed = entry.value === 1;
         updateArmedState();
@@ -1177,16 +1072,12 @@
       const ip = document.getElementById('video-ip').value;
       const port = document.getElementById('video-port').value;
       
-      pc = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-      });
+      pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
 
       pc.ontrack = (event) => {
         els.videoPlayer.srcObject = event.streams[0];
         els.videoOverlay.classList.add('hidden');
         els.videoInfo.classList.remove('hidden');
-        els.videoStatus.textContent = 'Live';
-        els.videoStatus.className = 'status-badge online';
       };
 
       pc.addTransceiver('video', { direction: 'recvonly' });
@@ -1225,8 +1116,6 @@
       els.videoPlayer.srcObject = null;
       els.videoOverlay.classList.remove('hidden');
       els.videoInfo.classList.add('hidden');
-      els.videoStatus.textContent = 'Offline';
-      els.videoStatus.className = 'status-badge offline';
       els.btnVideoConnect.classList.remove('hidden');
       els.btnVideoDisconnect.classList.add('hidden');
     }
@@ -1239,8 +1128,8 @@
       if (gp) {
         if (!gamepadConnected) {
           gamepadConnected = true;
-          els.gamepadStatus.className = 'gamepad-status connected';
-          els.gamepadText.textContent = gp.id.split('(')[0].trim();
+          els.gamepadStatus.className = 'gamepad-box connected';
+          els.gamepadText.textContent = gp.id.split('(')[0].trim().toUpperCase();
           els.gamepadValues.classList.remove('hidden');
         }
         
@@ -1255,15 +1144,8 @@
         const r = Math.round(yaw * 100);
         const z = Math.round(((-throttle + 1) / 2) * 100);
         
-        els.gamepadValues.innerHTML = `
-          <span>R:${x}</span>
-          <span>P:${y}</span>
-          <span>Y:${r}</span>
-          <span>T:${z}</span>
-        `;
-        console.log(x,y,r,z);
+        els.gamepadValues.innerHTML = `<span>X:${x}</span><span>Y:${y}</span><span>R:${r}</span><span>Z:${z}</span>`;
         sendManualControlState({ ...manualState }, true);
-        // Send manual control if armed
         if (armed) {
           manualState.x = x * 10;
           manualState.y = y * 10;
@@ -1274,8 +1156,8 @@
       } else {
         if (gamepadConnected) {
           gamepadConnected = false;
-          els.gamepadStatus.className = 'gamepad-status disconnected';
-          els.gamepadText.textContent = 'No gamepad detected';
+          els.gamepadStatus.className = 'gamepad-box';
+          els.gamepadText.textContent = 'SEARCHING FOR INPUT...';
           els.gamepadValues.classList.add('hidden');
         }
       }
@@ -1287,8 +1169,8 @@
     connect();
     pollGamepad();
     
-    window.addEventListener('gamepadconnected', () => console.log('Gamepad connected'));
-    window.addEventListener('gamepaddisconnected', () => console.log('Gamepad disconnected'));
+    // Setup initial canvas draw even without data
+    drawAttitudeIndicatorAbyss(0,0,0);
   </script>
 </body>
 </html>
