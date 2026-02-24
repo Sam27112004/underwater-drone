@@ -17,6 +17,7 @@ Before you begin, ensure you have the following installed:
 
 - [Node.js](https://nodejs.org/) (version 14 or higher)
 - [npm](https://www.npmjs.com/) (comes with Node.js)
+- [ffmpeg](https://ffmpeg.org/) (required for RTSP -> MJPEG browser streaming)
 - Git (for cloning the repository)
 
 ## Installation
@@ -39,6 +40,7 @@ Before you begin, ensure you have the following installed:
    BLUEOS_IP=192.168.2.2
    BLUEOS_MAVLINK_PORT=80
    BLUEOS_VIDEO_PORT=6020
+   BLUEOS_MJPEG_RTSP=rtsp://192.168.2.2:8554/video_stream__dev_video0
    ```
    
    Default values are used if no `.env` file is provided.
@@ -95,6 +97,11 @@ The application connects to BlueOS using the following default configuration:
 - **IP Address:** `192.168.2.2`
 - **MAVLink Port:** `80`
 - **Video Port:** `6020`
+
+For MJPEG browser streaming, the server exposes:
+
+- **MJPEG Endpoint:** `http://localhost:3000/video/mjpeg`
+- **RTSP Source:** `BLUEOS_MJPEG_RTSP` (defaults to BlueOS RTSP output)
 
 These can be customized via environment variables (see Installation step 3).
 

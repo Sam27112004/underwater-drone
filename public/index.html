@@ -154,9 +154,15 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      opacity: 0.8;
-      mix-blend-mode: luminosity;
+      opacity: 1;
       transition: opacity 1s;
+    }
+
+    #mjpeg-player {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 1;
     }
     
     .video-overlay {
@@ -212,6 +218,22 @@
       transition: var(--transition-fast);
     }
     input.mono-input:focus {
+      outline: none;
+      border-bottom-color: var(--text-main);
+    }
+
+    select.mono-select {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--text-muted);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.5rem;
+      width: 160px;
+      transition: var(--transition-fast);
+    }
+    select.mono-select:focus {
       outline: none;
       border-bottom-color: var(--text-main);
     }
@@ -450,6 +472,7 @@
     <section class="viewport-section">
       <div class="video-container">
         <video id="video-player" class="hover-target" autoplay playsinline muted></video>
+        <img id="mjpeg-player" class="hover-target hidden" alt="mjpeg stream">
         <div id="video-overlay" class="video-overlay">
           <div class="no-signal-text">AWAITING FEED</div>
         </div>
@@ -462,6 +485,13 @@
           <div>
             <span style="font-family:var(--font-mono);font-size:10px;color:gray;">PORT</span><br>
             <input type="text" id="video-port" class="mono-input hover-target" value="6020">
+          </div>
+          <div>
+            <span style="font-family:var(--font-mono);font-size:10px;color:gray;">MODE</span><br>
+            <select id="video-mode" class="mono-select hover-target">
+              <option value="mjpeg">MJPEG (RTSP)</option>
+              <option value="webrtc">WebRTC</option>
+            </select>
           </div>
           <button id="btn-video-connect" class="btn hover-target" style="margin-left:auto;">[ INITIATE ]</button>
           <button id="btn-video-disconnect" class="btn hover-target hidden" style="margin-left:auto;">[ TERMINATE ]</button>
@@ -713,6 +743,8 @@
       videoStatus: document.getElementById('video-status'),
       btnVideoConnect: document.getElementById('btn-video-connect'),
       btnVideoDisconnect: document.getElementById('btn-video-disconnect'),
+      mjpegPlayer: document.getElementById('mjpeg-player'),
+      videoMode: document.getElementById('video-mode'),
       attitudeCanvas: document.getElementById('attitude-canvas'),
       btnArm: document.getElementById('btn-arm'),
       btnDisarm: document.getElementById('btn-disarm'),
@@ -1069,42 +1101,57 @@
     els.btnVideoDisconnect.addEventListener('click', disconnectVideo);
 
     async function connectVideo() {
-      const ip = document.getElementById('video-ip').value;
-      const port = document.getElementById('video-port').value;
-      
-      pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+      const mode = els.videoMode.value;
 
-      pc.ontrack = (event) => {
-        els.videoPlayer.srcObject = event.streams[0];
-        els.videoOverlay.classList.add('hidden');
-        els.videoInfo.classList.remove('hidden');
-      };
+      if (mode === 'mjpeg') {
+        els.videoPlayer.classList.add('hidden');
+        els.mjpegPlayer.classList.remove('hidden');
+        els.videoOverlay.classList.remove('hidden');
+        els.videoInfo.classList.add('hidden');
 
-      pc.addTransceiver('video', { direction: 'recvonly' });
-      pc.addTransceiver('audio', { direction: 'recvonly' });
+        els.mjpegPlayer.onload = () => {
+          els.videoOverlay.classList.add('hidden');
+          els.videoInfo.classList.remove('hidden');
+        };
+        els.mjpegPlayer.src = '/video/mjpeg';
+      } else {
+        const ip = document.getElementById('video-ip').value;
+        const port = document.getElementById('video-port').value;
 
-      videoWs = new WebSocket(`ws://${ip}:${port}`);
+        pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
 
-      videoWs.onmessage = async (event) => {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'offer' && msg.sdp) {
-          await pc.setRemoteDescription(new RTCSessionDescription(msg));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          videoWs.send(JSON.stringify({ type: 'answer', sdp: answer.sdp }));
-        } else if (msg.type === 'ice' && msg.candidate) {
-          await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
-        }
-      };
+        pc.ontrack = (event) => {
+          els.videoPlayer.srcObject = event.streams[0];
+          els.videoOverlay.classList.add('hidden');
+          els.videoInfo.classList.remove('hidden');
+        };
 
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
+        pc.addTransceiver('video', { direction: 'recvonly' });
+        pc.addTransceiver('audio', { direction: 'recvonly' });
 
-      setTimeout(() => {
-        if (videoWs.readyState === WebSocket.OPEN && pc.localDescription) {
-          videoWs.send(JSON.stringify({ type: 'offer', sdp: pc.localDescription.sdp }));
-        }
-      }, 500);
+        videoWs = new WebSocket(`ws://${ip}:${port}`);
+
+        videoWs.onmessage = async (event) => {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'offer' && msg.sdp) {
+            await pc.setRemoteDescription(new RTCSessionDescription(msg));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            videoWs.send(JSON.stringify({ type: 'answer', sdp: answer.sdp }));
+          } else if (msg.type === 'ice' && msg.candidate) {
+            await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
+          }
+        };
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        setTimeout(() => {
+          if (videoWs.readyState === WebSocket.OPEN && pc.localDescription) {
+            videoWs.send(JSON.stringify({ type: 'offer', sdp: pc.localDescription.sdp }));
+          }
+        }, 500);
+      }
 
       els.btnVideoConnect.classList.add('hidden');
       els.btnVideoDisconnect.classList.remove('hidden');
@@ -1114,6 +1161,9 @@
       if (videoWs) videoWs.close();
       if (pc) pc.close();
       els.videoPlayer.srcObject = null;
+      els.mjpegPlayer.src = '';
+      els.mjpegPlayer.classList.add('hidden');
+      els.videoPlayer.classList.remove('hidden');
       els.videoOverlay.classList.remove('hidden');
       els.videoInfo.classList.add('hidden');
       els.btnVideoConnect.classList.remove('hidden');

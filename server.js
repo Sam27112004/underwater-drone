@@ -9,6 +9,7 @@ import cors from 'cors';
 import fetch from 'node-fetch';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { spawn } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,7 +22,10 @@ const wss = new WebSocketServer({ server });
 const BLUEOS_CONFIG = {
   ip: process.env.BLUEOS_IP || '192.168.2.2',
   mavlinkPort: process.env.BLUEOS_MAVLINK_PORT || 80,
-  videoPort: process.env.BLUEOS_VIDEO_PORT || 6020
+  videoPort: process.env.BLUEOS_VIDEO_PORT || 6020,
+  mjpegRtspUrl:
+    process.env.BLUEOS_MJPEG_RTSP ||
+    'rtsp://192.168.2.2:8554/video_stream__dev_video0'
 };
 
 console.log('BlueOS Config:', BLUEOS_CONFIG);
@@ -145,11 +149,11 @@ function processMAVLinkMessage(message, header) {
       if (isCompanion) {
         const now = Date.now();
         if (now - lastCompanionHeartbeatLogAt > 3000) {
-          console.warn('Ignoring companion heartbeat:', {
-            autopilot: autopilotType,
-            mavtype: mavType,
-            header
-          });
+          // console.warn('Ignoring companion heartbeat:', {
+          //   autopilot: autopilotType,
+          //   mavtype: mavType,
+          //   header
+          // });
           lastCompanionHeartbeatLogAt = now;
         }
         return null;
@@ -415,6 +419,55 @@ async function sendMAVLinkCommand(command) {
 }
 
 // REST API Routes
+
+// MJPEG proxy (RTSP -> multipart MJPEG)
+app.get('/video/mjpeg', (req, res) => {
+  const rtspUrl = req.query?.url || BLUEOS_CONFIG.mjpegRtspUrl;
+  if (!rtspUrl) {
+    res.status(400).json({ error: 'Missing RTSP URL' });
+    return;
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'multipart/x-mixed-replace; boundary=ffmpeg',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    Pragma: 'no-cache',
+    Expires: '0'
+  });
+
+  const ffmpeg = spawn('ffmpeg', [
+    '-rtsp_transport', 'tcp',
+    '-i', rtspUrl,
+    '-an',
+    '-vf', 'scale=1280:-2',
+    '-r', '30',
+    '-q:v', '5',
+    '-f', 'mpjpeg',
+    'pipe:1'
+  ], { stdio: ['ignore', 'pipe', 'pipe'] });
+
+  ffmpeg.stdout.pipe(res);
+
+  ffmpeg.stderr.on('data', (data) => {
+    const text = data.toString();
+    if (text.includes('error') || text.includes('Error')) {
+      console.error('ffmpeg:', text.trim());
+    }
+  });
+
+  ffmpeg.on('error', (err) => {
+    console.error('ffmpeg spawn error:', err.message);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to start ffmpeg' });
+    } else {
+      res.end();
+    }
+  });
+
+  req.on('close', () => {
+    ffmpeg.kill('SIGKILL');
+  });
+});
 
 // Get all cached telemetry
 app.get('/api/telemetry', (req, res) => {
