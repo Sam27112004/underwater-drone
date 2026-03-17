@@ -1,0 +1,459 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   globals.css — Migrated verbatim from public/index.html <style> block.
+   All CSS variables, base resets, layout, components, and animations.
+───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Design Tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --bg-base: #030303;
+  --bg-surface: #0a0a0a;
+  --bg-surface-hover: #111111;
+  --border-color: rgba(255, 255, 255, 0.08);
+
+  --text-main: #ffffff;
+  --text-muted: #666666;
+
+  --accent: #ff4500;
+  --accent-glow: rgba(255, 69, 0, 0.4);
+  --success: #00ff66;
+  --warning: #ffcc00;
+  --danger: #ff3333;
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --transition-smooth: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  cursor: none;
+}
+
+/* ── Root + Body ────────────────────────────────────────────────────────────── */
+body {
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  font-family: var(--font-display);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* React mounts inside #root — it becomes the flex column container
+   that the original <body> was in the plain HTML version. */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Custom Cursor ──────────────────────────────────────────────────────────── */
+#cursor-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--text-main);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: difference;
+}
+
+#cursor-ring {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, background 0.2s, border-color 0.2s;
+  mix-blend-mode: difference;
+}
+
+.hover-target:hover ~ #cursor-ring {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: transparent;
+}
+
+/* ── Header Nav ─────────────────────────────────────────────────────────────── */
+header {
+  padding: 1.5rem 3vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+  z-index: 100;
+  background: rgba(3, 3, 3, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-mark {
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.top-status {
+  display: flex;
+  gap: 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.status-badge {
+  color: var(--text-main);
+  font-weight: 700;
+}
+.status-badge.online { color: var(--success); }
+.status-badge.offline { color: var(--danger); }
+
+/* ── Main Two-Column Layout ─────────────────────────────────────────────────── */
+main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  position: relative;
+}
+
+@media (max-width: 1200px) {
+  main { grid-template-columns: 1fr; }
+}
+
+/* ── Left: Video Section ────────────────────────────────────────────────────── */
+.viewport-section {
+  position: relative;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  overflow: hidden;
+}
+
+.video-container {
+  flex: 1;
+  position: relative;
+}
+
+#video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 1;
+  transition: opacity 1s;
+}
+
+#mjpeg-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 1;
+}
+
+.video-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+
+.no-signal-text {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  letter-spacing: 4px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.video-controls-panel {
+  position: absolute;
+  bottom: 2rem;
+  left: 2rem;
+  right: 2rem;
+  display: flex;
+  gap: 1rem;
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(12px);
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+input.mono-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--text-muted);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  width: 120px;
+  transition: var(--transition-fast);
+}
+input.mono-input:focus {
+  outline: none;
+  border-bottom-color: var(--text-main);
+}
+
+select.mono-select {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--text-muted);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.5rem;
+  width: 160px;
+  transition: var(--transition-fast);
+}
+select.mono-select:focus {
+  outline: none;
+  border-bottom-color: var(--text-main);
+}
+
+/* ── Right: Control Panel ───────────────────────────────────────────────────── */
+.control-panel {
+  padding: 3rem 4vw;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+  overflow-y: auto;
+  height: calc(100vh - 80px); /* offset for header */
+}
+.control-panel::-webkit-scrollbar { display: none; }
+
+/* ── Section Titles ─────────────────────────────────────────────────────────── */
+h2.section-title {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+h2.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
+.btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 1rem 2rem;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  z-index: 1;
+}
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 100%; left: 0; width: 100%; height: 100%;
+  background: var(--text-main);
+  transition: var(--transition-smooth);
+  z-index: -1;
+}
+.btn:hover::before { top: 0; }
+.btn:hover { color: var(--bg-base); border-color: transparent; }
+
+.btn-super {
+  font-size: 1.25rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 1.5rem;
+  width: 100%;
+  background: var(--bg-surface);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.btn-super.danger::before  { background: var(--danger); }
+.btn-super.success::before { background: var(--success); }
+
+/* ── Telemetry Data Grid ────────────────────────────────────────────────────── */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.data-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+  padding: 1.5rem;
+  background: var(--bg-surface);
+  border: 1px solid transparent;
+  transition: var(--transition-fast);
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+.data-item:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-color);
+}
+
+.data-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.data-value {
+  font-size: 2.5rem;
+  font-weight: 300;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.data-value .unit {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}
+.data-value.accent { color: var(--accent); }
+
+/* ── Battery Bar ────────────────────────────────────────────────────────────── */
+.battery-visual {
+  margin-top: 1rem;
+  height: 2px;
+  background: var(--border-color);
+  width: 100%;
+  position: relative;
+}
+.battery-fill {
+  position: absolute;
+  top: 0; left: 0; height: 100%;
+  background: var(--success);
+  transition: width 1s cubic-bezier(0.85, 0, 0.15, 1);
+  box-shadow: 0 0 10px var(--success);
+}
+
+/* ── Attitude Canvas ────────────────────────────────────────────────────────── */
+.attitude-wrap {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+#attitude-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* Static crosshair overlay */
+.attitude-wrap::after {
+  content: '+';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  pointer-events: none;
+}
+
+/* ── Flight Mode Select ─────────────────────────────────────────────────────── */
+.custom-select {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--text-main);
+  color: var(--text-main);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  padding: 1rem 0;
+  appearance: none;
+  transition: var(--transition-fast);
+}
+.custom-select:focus { outline: none; border-color: var(--accent); }
+.custom-select option { background: var(--bg-base); color: var(--text-main); }
+
+/* ── Gamepad Status ─────────────────────────────────────────────────────────── */
+.gamepad-box {
+  border-left: 2px solid var(--danger);
+  padding-left: 1.5rem;
+  font-family: var(--font-mono);
+}
+.gamepad-box.connected { border-left-color: var(--success); }
+.gamepad-box p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+/* .gamepad-text targets the id in original; using class here for React */
+.gamepad-box .gamepad-text { color: var(--text-main); font-weight: bold; }
+
+/* ── Utilities ──────────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
+footer {
+  position: fixed;
+  bottom: 0; right: 0;
+  padding: 1rem 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: rgba(3, 3, 3, 0.9);
+  backdrop-filter: blur(5px);
+  border-top-left-radius: 8px;
+  border-top: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  gap: 1.5rem;
+}
