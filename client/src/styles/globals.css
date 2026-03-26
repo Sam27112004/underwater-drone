@@ -210,26 +210,62 @@ main {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 1rem 2rem 2rem;
+  padding: 0.75rem 1rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .video-control-label {
   font-family: var(--font-mono);
   font-size: 10px;
   color: gray;
+  display: block;
+  margin-bottom: 4px;
 }
 
 .video-controls-panel {
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 0.6rem;
   background: rgba(10, 10, 10, 0.6);
   backdrop-filter: blur(12px);
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   border: 1px solid var(--border-color);
   border-radius: 8px;
+}
+
+/* Top row: HOST / PORT / MODE inputs — each on its own cell */
+.video-ctrl-inputs {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.video-ctrl-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Bottom row: action buttons + LIVE */
+.video-ctrl-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Smaller buttons specifically for the video HUD bar */
+.video-hud-btn {
+  padding: 0.45rem 0.9rem !important;
+  font-size: 0.72rem !important;
+}
+
+.video-live-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  color: var(--success);
+  padding: 0 0.25rem;
 }
 
 /* ── AI Panel ─────────────────────────────────────────────────────────────── */
@@ -301,8 +337,8 @@ main {
 
 .ai-toggle-btn {
   margin-left: auto;
-  padding: 0.5rem 1rem !important;
-  font-size: 0.7rem !important;
+  padding: 0.45rem 0.9rem !important;
+  font-size: 0.72rem !important;
 }
 .ai-toggle-active {
   border-color: var(--success) !important;
@@ -311,6 +347,32 @@ main {
 .ai-toggle-btn:disabled {
   opacity: 0.35;
   pointer-events: none;
+}
+
+/* ── Record button ───────────────────────────────────────────────────────── */
+.record-btn-active {
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+  animation: rec-pulse 1.2s ease-in-out infinite;
+}
+.record-btn-active::before { background: var(--danger) !important; }
+.record-btn-active:hover   { color: #fff !important; }
+
+@keyframes rec-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0); }
+  50%       { box-shadow: 0 0 8px 2px rgba(255, 51, 51, 0.35); }
+}
+
+/* ── Recording canvas (in DOM but invisible — needed for captureStream) ────── */
+.recording-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  width: 0 !important;
+  height: 0 !important;
+  z-index: -1;
 }
 
 /* ── Detection canvas overlay ─────────────────────────────────────────────── */
@@ -331,7 +393,7 @@ input.mono-input {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   padding: 0.5rem;
-  width: 120px;
+  width: 100px;
   transition: var(--transition-fast);
 }
 input.mono-input:focus {
@@ -403,6 +465,7 @@ h2.section-title::after {
   justify-content: center;
   gap: 0.5rem;
   z-index: 1;
+  white-space: nowrap;
 }
 .btn::before {
   content: '';
@@ -513,6 +576,27 @@ h2.section-title::after {
   font-family: var(--font-mono);
   font-size: 1.5rem;
   pointer-events: none;
+}
+
+/* ── Lights ─────────────────────────────────────────────────────────────────── */
+.lights-block {
+  margin-top: 2rem;
+}
+
+.lights-btn {
+  margin-top: 0.75rem;
+}
+
+.lights-btn.lights-on {
+  border-color: var(--warning) !important;
+  color: var(--warning) !important;
+  box-shadow: 0 0 12px rgba(255, 204, 0, 0.25);
+}
+.lights-btn.lights-on::before {
+  background: var(--warning) !important;
+}
+.lights-btn.lights-on:hover {
+  color: var(--bg-base) !important;
 }
 
 /* ── Flight Mode Select ─────────────────────────────────────────────────────── */

@@ -66,6 +66,35 @@ export default function App() {
         });
     }, []);
 
+    // ── Lights (relay control) ────────────────────────────────────────────────
+    // Toggles RELAY_PIN (index 0, pin 55) and RELAY_PIN2 (index 1, pin 54) together
+    // since we're unsure which relay the lights are wired to.
+    const [lightsOn, setLightsOn] = useState(false);
+
+    const handleToggleLights = useCallback(() => {
+        const nextState = !lightsOn;
+        const param2 = nextState ? 1.0 : 0.0; // 1 = on, 0 = off
+
+        // Send for both relay indices
+        [0, 1].forEach((relayIndex) => {
+            sendCommand({
+                header: { system_id: 255, component_id: 190, sequence: 0 },
+                message: {
+                    type: 'COMMAND_LONG',
+                    param1: relayIndex,
+                    param2,
+                    param3: 0, param4: 0, param5: 0, param6: 0, param7: 0,
+                    command: { type: 'MAV_CMD_DO_SET_RELAY' },
+                    target_system: targetSystemId,
+                    target_component: targetComponentId,
+                    confirmation: 0,
+                },
+            });
+        });
+
+        setLightsOn(nextState);
+    }, [lightsOn, sendCommand, targetSystemId, targetComponentId]);
+
     const batteryPct = battery?.remaining ?? null;
 
     const clamp = useCallback((value, min, max) => {
@@ -322,6 +351,7 @@ export default function App() {
     const { gamepadConnected, gamepadId, gamepadValues } = useGamepad({
         onManualControl: handleGamepadManualControl,
         armed,
+        onLightsToggle: handleToggleLights,
     });
 
     const onAxisPress = useCallback(
@@ -378,6 +408,8 @@ export default function App() {
                         onArm={() => sendArmCommand(1)}
                         onDisarm={() => sendArmCommand(0)}
                         onModeChange={handleModeChange}
+                        lightsOn={lightsOn}
+                        onToggleLights={handleToggleLights}
                     />
 
                     <TelemetryGrid

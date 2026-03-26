@@ -1,6 +1,6 @@
 import { modeDescriptions } from '../hooks/useTelemetry.js';
 
-export default function CoreStatus({ armed, currentMode, onArm, onDisarm, onModeChange }) {
+export default function CoreStatus({ armed, currentMode, onArm, onDisarm, onModeChange, lightsOn, onToggleLights }) {
   const modeValue = Number.isFinite(currentMode) ? currentMode : 9;
   const description = modeDescriptions[modeValue] ?? modeDescriptions[9];
 
@@ -42,6 +42,20 @@ export default function CoreStatus({ armed, currentMode, onArm, onDisarm, onMode
         </select>
 
         <p className="mode-description">{description}</p>
+      </div>
+
+      {/* ── Lights ── */}
+      <div className="lights-block">
+        <p className="mono-label">ILLUMINATION</p>
+        <button
+          className={`btn btn-super hover-target lights-btn ${lightsOn ? 'lights-on' : ''}`}
+          onClick={onToggleLights}
+        >
+          {lightsOn ? 'LIGHTS OFF' : 'LIGHTS ON'}
+        </button>
+        <p className="mono-label" style={{ marginTop: '0.5rem', fontSize: '0.6rem' }}>
+          RELAY 1 (PIN 55) + RELAY 2 (PIN 54)
+        </p>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 
-export default function useGamepad({ onManualControl, armed }) {
+export default function useGamepad({ onManualControl, armed, onLightsToggle }) {
   const [gamepadConnected, setGamepadConnected] = useState(false);
   const [gamepadId, setGamepadId] = useState('SEARCHING FOR INPUT...');
   const [gamepadValues, setGamepadValues] = useState({ x: 0, y: 0, z: 0, r: 0 });
@@ -8,7 +8,10 @@ export default function useGamepad({ onManualControl, armed }) {
   const rafRef = useRef(null);
   const armedRef = useRef(armed);
   const callbackRef = useRef(onManualControl);
+  const lightsToggleRef = useRef(onLightsToggle);
   const connectedRef = useRef(false);
+  // Track previous button pressed state for edge detection (fire once per press)
+  const prevButtonsRef = useRef({});
 
   useEffect(() => {
     armedRef.current = armed;
@@ -17,6 +20,10 @@ export default function useGamepad({ onManualControl, armed }) {
   useEffect(() => {
     callbackRef.current = onManualControl;
   }, [onManualControl]);
+
+  useEffect(() => {
+    lightsToggleRef.current = onLightsToggle;
+  }, [onLightsToggle]);
 
   useEffect(() => {
     function applyDeadzone(value, deadzone) {
@@ -51,6 +58,15 @@ export default function useGamepad({ onManualControl, armed }) {
         if (armedRef.current && callbackRef.current) {
           callbackRef.current(values);
         }
+
+        // ── Button edge detection (fires once per press, not while held) ──
+        // Button 14 = D-pad left → toggle lights
+        const LIGHTS_BUTTON = 14;
+        const nowPressed = gp.buttons[LIGHTS_BUTTON]?.pressed ?? false;
+        if (nowPressed && !prevButtonsRef.current[LIGHTS_BUTTON]) {
+          lightsToggleRef.current?.();
+        }
+        prevButtonsRef.current[LIGHTS_BUTTON] = nowPressed;
       } else {
         if (connectedRef.current) {
           connectedRef.current = false;
