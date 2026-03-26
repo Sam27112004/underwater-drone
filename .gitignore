@@ -13,3 +13,11 @@ npm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# IDE files
+.claude/
+CLAUDE.md
+
+# ONNX model files (large binaries — store separately)
+client/public/models/*.onnx
+client/public/models/*.pt

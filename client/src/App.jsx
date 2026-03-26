@@ -11,6 +11,8 @@ import Peripherals from './components/Peripherals.jsx';
 import useWebSocket from './hooks/useWebSocket.js';
 import useTelemetry from './hooks/useTelemetry.js';
 import useGamepad from './hooks/useGamepad.js';
+import useYOLO from './hooks/useYOLO.js';
+import { MODEL_REGISTRY } from './models/registry.js';
 
 export default function App() {
     const { backendConnected, mavlinkConnected, messageRate, lastMessage, sendCommand } =
@@ -35,6 +37,34 @@ export default function App() {
     const mjpegRef = useRef(null);
     const pcRef = useRef(null);
     const videoWsRef = useRef(null);
+
+    // ── AI / YOLO state ────────────────────────────────────────────────────────
+    const [selectedModelId, setSelectedModelId] = useState('none');
+    const [aiActive, setAiActive]               = useState(false);
+    const [detections, setDetections]           = useState([]);
+    const [inferenceFps, setInferenceFps]       = useState(0);
+    const inferenceActiveRef                    = useRef(false); // prevents overlapping async calls
+    const fpsCountRef                           = useRef(0);
+    const fpsTimerRef                           = useRef(Date.now());
+
+    const selectedModel = MODEL_REGISTRY.find(m => m.id === selectedModelId) ?? null;
+    const { isLoading: modelLoading, error: modelError, runInference } = useYOLO(
+        selectedModelId !== 'none' ? selectedModel : null
+    );
+
+    const handleModelChange = useCallback((id) => {
+        setSelectedModelId(id);
+        setAiActive(false);
+        setDetections([]);
+        setInferenceFps(0);
+    }, []);
+
+    const handleToggleAI = useCallback(() => {
+        setAiActive(prev => {
+            if (prev) { setDetections([]); setInferenceFps(0); }
+            return !prev;
+        });
+    }, []);
 
     const batteryPct = battery?.remaining ?? null;
 
@@ -234,6 +264,47 @@ export default function App() {
         };
     }, [disconnectVideo]);
 
+    // ── YOLO inference loop ────────────────────────────────────────────────────
+    useEffect(() => {
+        if (!aiActive || !videoConnected || !runInference) return;
+
+        let rafId;
+
+        const loop = async () => {
+            // pick the visible source element
+            const source = videoMode === 'mjpeg' ? mjpegRef.current : videoRef.current;
+            const ready  = source && (
+                (source.tagName === 'IMG'   && source.naturalWidth  > 0) ||
+                (source.tagName === 'VIDEO' && source.readyState   >= 2)
+            );
+
+            if (ready && !inferenceActiveRef.current) {
+                inferenceActiveRef.current = true;
+                try {
+                    const dets = await runInference(source);
+                    setDetections(dets);
+                    fpsCountRef.current++;
+                    const now = Date.now();
+                    if (now - fpsTimerRef.current >= 1000) {
+                        setInferenceFps(fpsCountRef.current);
+                        fpsCountRef.current = 0;
+                        fpsTimerRef.current = now;
+                    }
+                } finally {
+                    inferenceActiveRef.current = false;
+                }
+            }
+
+            rafId = requestAnimationFrame(loop);
+        };
+
+        rafId = requestAnimationFrame(loop);
+        return () => {
+            cancelAnimationFrame(rafId);
+            inferenceActiveRef.current = false;
+        };
+    }, [aiActive, videoConnected, videoMode, runInference, mjpegRef, videoRef]);
+
     const handleGamepadManualControl = useCallback(
         ({ x, y, z, r }) => {
             manualStateRef.current = {
@@ -290,6 +361,14 @@ export default function App() {
                     videoRef={videoRef}
                     mjpegRef={mjpegRef}
                     connected={videoConnected}
+                    detections={detections}
+                    selectedModelId={selectedModelId}
+                    onModelChange={handleModelChange}
+                    modelLoading={modelLoading}
+                    modelError={modelError}
+                    inferenceFps={inferenceFps}
+                    aiActive={aiActive}
+                    onToggleAI={handleToggleAI}
                 />
 
                 <section className="control-panel">

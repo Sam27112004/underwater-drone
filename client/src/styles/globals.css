@@ -204,11 +204,25 @@ main {
   50%       { opacity: 0.3; }
 }
 
-.video-controls-panel {
+/* ── Video Bottom Bar (wraps both control rows) ─────────────────────────── */
+.video-bottom-bar {
   position: absolute;
-  bottom: 2rem;
-  left: 2rem;
-  right: 2rem;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.video-control-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: gray;
+}
+
+.video-controls-panel {
   display: flex;
   gap: 1rem;
   background: rgba(10, 10, 10, 0.6);
@@ -216,6 +230,97 @@ main {
   padding: 1rem;
   border: 1px solid var(--border-color);
   border-radius: 8px;
+}
+
+/* ── AI Panel ─────────────────────────────────────────────────────────────── */
+.ai-panel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(12px);
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.ai-panel-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.ai-model-select {
+  width: 240px !important;
+  font-size: 0.7rem !important;
+}
+
+.ai-status-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-color);
+}
+.ai-status-live    { color: var(--success); border-color: var(--success); background: rgba(0,255,102,0.08); }
+.ai-status-ready   { color: var(--warning); border-color: rgba(255,204,0,0.4); }
+.ai-status-loading { color: var(--accent);  border-color: rgba(255,69,0,0.4); }
+.ai-status-error   { color: var(--danger);  border-color: rgba(255,51,51,0.4); }
+.ai-status-off     { color: var(--text-muted); }
+
+.ai-fps {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--success);
+  font-weight: 700;
+  min-width: 2rem;
+  text-align: right;
+}
+.ai-fps-unit {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  margin-left: 1px;
+}
+
+.ai-error {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--danger);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-toggle-btn {
+  margin-left: auto;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.7rem !important;
+}
+.ai-toggle-active {
+  border-color: var(--success) !important;
+  color: var(--success) !important;
+}
+.ai-toggle-btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* ── Detection canvas overlay ─────────────────────────────────────────────── */
+.detection-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 8;
 }
 
 input.mono-input {

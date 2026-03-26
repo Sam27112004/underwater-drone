@@ -16,4 +16,10 @@ export default defineConfig({
       '/video': 'http://localhost:3000',
     },
   },
+  // onnxruntime-web ships pre-built WASM/JS bundles that Vite must not
+  // try to re-bundle.  Excluding it here prevents "Cannot use import
+  // statement outside a module" and missing-WASM errors.
+  optimizeDeps: {
+    exclude: ['onnxruntime-web'],
+  },
 });
