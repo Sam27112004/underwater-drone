@@ -18,6 +18,11 @@ Thumbs.db
 .claude/
 CLAUDE.md
 
+# Build artifacts (Vite output)
+public/assets/
+
 # ONNX model files (large binaries — store separately)
 client/public/models/*.onnx
 client/public/models/*.pt
+
+tagged_frames/
