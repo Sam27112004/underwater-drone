@@ -1,154 +1,201 @@
 # ROV Control Station
 
-A web-based control station for Remotely Operated Vehicles (ROV) with BlueOS integration. This application provides real-time control, video streaming, and telemetry monitoring for underwater drones.
+A web-based control station for Remotely Operated Vehicles (ROV) with BlueOS integration. Provides real-time control, live video streaming, telemetry monitoring, AI/ML object detection, frame tagging, and inspection reporting for underwater drones.
 
 ## Features
 
-- 🎮 Real-time ROV control interface
-- 📹 Live video streaming
-- 📊 Telemetry data monitoring
-- 🔌 WebSocket-based communication
-- 🌊 BlueOS integration
-- 💻 Responsive web interface
+- Real-time ROV control via keyboard, gamepad, or on-screen buttons
+- Live video streaming — MJPEG (RTSP proxy) and WebRTC
+- Full telemetry display — attitude, depth, pressure, battery, GPS
+- AI/ML bounding-box detection overlay (ONNX Runtime Web, runs in browser)
+- Frame tagging — capture frames with live telemetry + detections attached (hotkey `T`)
+- Frame gallery — browse, inspect, and delete tagged frames
+- Inspection report — self-contained HTML report with embedded images and bbox overlays
+- Video recording — downloads MP4/WebM directly from the browser
+- Lights control via MAVLink relay command (gamepad d-pad left)
+- BlueOS / MAVLink2REST integration
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
+- [Node.js](https://nodejs.org/) 18+
+- [npm](https://www.npmjs.com/)
+- [ffmpeg](https://ffmpeg.org/) on PATH (required for RTSP → MJPEG proxy)
+- [Git LFS](https://git-lfs.github.com/) (required to pull ONNX model files)
+- Python 3 + OpenCV (`pip install opencv-python numpy`) — only needed for mosaic feature
 
-- [Node.js](https://nodejs.org/) (version 14 or higher)
-- [npm](https://www.npmjs.com/) (comes with Node.js)
-- [ffmpeg](https://ffmpeg.org/) (required for RTSP -> MJPEG browser streaming)
-- Git (for cloning the repository)
+## Cloning (with models)
+
+Git LFS is used for large ONNX model files. You must install Git LFS **before** cloning, or the model files will be 1 KB pointer stubs instead of the real binaries.
+
+```bash
+# 1. Install Git LFS (once per machine)
+git lfs install
+
+# 2. Clone — LFS files are downloaded automatically
+git clone https://github.com/Sam27112004/underwater-drone.git
+cd underwater-drone
+```
+
+If you already cloned without LFS, fetch the real files:
+
+```bash
+git lfs pull
+```
 
 ## Installation
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/underwater-drone.git
-   cd underwater-drone
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Configure BlueOS (optional):**
-   
-   Create a `.env` file in the project root to customize BlueOS settings:
-   ```env
-   BLUEOS_IP=192.168.2.2
-   BLUEOS_MAVLINK_PORT=80
-   BLUEOS_VIDEO_PORT=6020
-   BLUEOS_MJPEG_RTSP=rtsp://192.168.2.2:8554/video_stream__dev_video0
-   ```
-   
-   Default values are used if no `.env` file is provided.
-
-## Running the Application
-
-### Development Mode
-
-Start the server:
 ```bash
+# Backend dependencies
+npm install
+
+# Frontend dependencies
+cd client && npm install && cd ..
+```
+
+## Running
+
+### Development (recommended)
+
+Runs Vite in watch mode + Express together. Rebuilds the frontend on every save.
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+### Production
+
+```bash
+cd client && npm run build && cd ..
 npm start
 ```
 
-Or:
+### Frontend HMR (Vite dev server only)
+
 ```bash
-node server.js
+cd client && npm run dev   # http://localhost:5173
 ```
 
-The server will start on `http://localhost:3000` by default.
+> Note: WebSocket telemetry connects to `window.location.host` directly, so it won't work on the Vite dev server port. Use `npm run dev` from the root instead for full functionality.
 
-### Simple Server (Alternative)
+## Configuration
 
-For a simpler HTTP server without WebSocket features:
-```bash
-node simple-server.js
+Create a `.env` file in the project root to override defaults:
+
+```env
+BLUEOS_IP=192.168.2.2
+BLUEOS_MAVLINK_PORT=80
+BLUEOS_VIDEO_PORT=6020
+BLUEOS_MJPEG_RTSP=rtsp://192.168.2.2:8554/video_stream__dev_video0
+PORT=3000
 ```
-
-## Usage
-
-1. Open your web browser and navigate to `http://localhost:3000`
-2. The ROV Control Station interface will load
-3. Connect to your ROV/BlueOS system
-4. Use the control interface to operate the vehicle
 
 ## Project Structure
 
 ```
 underwater-drone/
-├── public/
-│   └── index.html       # Frontend interface
-├── server.js            # Main server with WebSocket support
-├── simple-server.js     # Basic HTTP server
-├── package.json         # Project dependencies
-├── .gitignore          # Git ignore rules
-└── README.md           # This file
+├── client/                     # React 18 + Vite frontend
+│   ├── public/
+│   │   └── models/             # ONNX model files (source of truth, tracked via LFS)
+│   └── src/
+│       ├── App.jsx             # Root component — state, hooks, layout
+│       ├── components/         # UI components
+│       ├── hooks/              # useWebSocket, useTelemetry, useGamepad, useYOLO
+│       └── models/registry.js  # Model registry — add new models here
+├── scripts/
+│   └── mosaic.py               # OpenCV CLAHE + stitching script
+├── public/                     # Vite build output (gitignored except index.html)
+│   └── models/                 # Build copy of client/public/models/ — do not edit here
+├── tagged_frames/              # Saved tagged frames + tags.json (gitignored)
+├── server.js                   # Express + WebSocket backend
+├── .gitattributes              # Git LFS rules (*.onnx, *.pt, *.pth, *.weights)
+├── .env                        # Local config (gitignored)
+└── package.json
 ```
 
-## Configuration
+## Adding a New Detection Model
 
-### BlueOS Connection
+1. Export to ONNX:
+   ```bash
+   yolo export model=yourmodel.pt format=onnx imgsz=640 simplify=True
+   ```
+2. Place the `.onnx` file in `client/public/models/`
+3. Add an entry to `client/src/models/registry.js` — the dropdown updates automatically
+4. Commit and push via LFS (see below)
 
-The application connects to BlueOS using the following default configuration:
+## Git LFS — Working with Models
 
-- **IP Address:** `192.168.2.2`
-- **MAVLink Port:** `80`
-- **Video Port:** `6020`
+Model files (`*.onnx`, `*.pt`, `*.pth`, `*.weights`) are stored in Git LFS, not in the regular git object database.
 
-For MJPEG browser streaming, the server exposes:
+### Pull latest models after a team push
 
-- **MJPEG Endpoint:** `http://localhost:3000/video/mjpeg`
-- **RTSP Source:** `BLUEOS_MJPEG_RTSP` (defaults to BlueOS RTSP output)
+```bash
+git pull
+git lfs pull          # fetches any new/updated LFS files
+```
 
-These can be customized via environment variables (see Installation step 3).
+### Push new or updated models
 
-## Dependencies
+```bash
+# Copy model into client/public/models/
+git add client/public/models/yourmodel.onnx
+git commit -m "feat: add yourmodel detection model"
+git push origin main  # LFS objects are uploaded automatically before the refs
+```
 
-- **express** - Web framework
-- **ws** - WebSocket implementation
-- **cors** - Cross-origin resource sharing
-- **node-fetch** - HTTP request library
+### Check which files are tracked by LFS
+
+```bash
+git lfs ls-files
+```
+
+### Verify LFS is set up correctly
+
+```bash
+git lfs status        # shows staged LFS files
+git lfs env           # shows LFS config and endpoint
+```
+
+> The `public/models/` directory at the repo root is **build output** (Vite copies `client/public/` there on every build). It is gitignored — only `client/public/models/` is the source and tracked in git.
+
+## API Reference
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | Server + MAVLink status |
+| GET | `/api/telemetry` | All cached telemetry |
+| GET | `/api/tags` | List all tagged frames |
+| POST | `/api/tags` | Save a tagged frame |
+| GET | `/api/tags/:id/image` | Serve a frame JPEG |
+| DELETE | `/api/tags/:id` | Delete a tagged frame |
+| DELETE | `/api/tags` | Reset all tagged frames |
+| GET | `/api/report` | Download HTML inspection report |
+| POST | `/api/mosaic` | Generate OpenCV mosaic from tagged frames |
+| GET | `/video/mjpeg` | RTSP → MJPEG proxy stream |
 
 ## Troubleshooting
 
-### Port Already in Use
+**Model files are 1 KB stubs after cloning**
+Run `git lfs install` then `git lfs pull`.
 
-If port 3000 is already in use, modify the port in `server.js`.
+**Port 3000 already in use**
+Set `PORT=3001` in `.env`.
 
-### Cannot Connect to BlueOS
+**Cannot connect to BlueOS**
+- Verify the ROV is powered and network-connected (`ping 192.168.2.2`)
+- Check `BLUEOS_IP` in `.env`
 
-- Verify the BlueOS IP address is correct
-- Ensure your computer is on the same network as the ROV
-- Check firewall settings
+**No video stream**
+- Confirm `ffmpeg` is on PATH: `ffmpeg -version`
+- Check the RTSP URL in `.env`
 
-### Dependencies Installation Failed
-
-Try clearing npm cache and reinstalling:
+**npm install fails**
 ```bash
 npm cache clean --force
 npm install
 ```
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
 ## License
 
-This project is open source and available under the [MIT License](LICENSE).
-
-## Support
-
-For issues, questions, or contributions, please open an issue on GitHub.
-
-## Acknowledgments
-
-- BlueOS for ROV control system integration
-- The underwater robotics community
+MIT
