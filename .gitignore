@@ -21,8 +21,10 @@ CLAUDE.md
 # Build artifacts (Vite output)
 public/assets/
 
-# ONNX model files (large binaries — store separately)
-client/public/models/*.onnx
-client/public/models/*.pt
+# ONNX / PyTorch model files (large binaries — store separately, use Git LFS if needed)
+*.onnx
+*.pt
+*.pth
+*.weights
 
 tagged_frames/

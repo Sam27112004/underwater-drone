@@ -180,13 +180,16 @@ export default function useYOLO(modelConfig) {
       );
 
       // output bbox coords are in 0..inputSize space; divide by inputSize
-      return detections.map(d => ({
-        ...d,
-        x1: d.x1 / inputSize,
-        y1: d.y1 / inputSize,
-        x2: d.x2 / inputSize,
-        y2: d.y2 / inputSize,
-      }));
+      return detections
+        .map(d => ({
+          ...d,
+          x1: d.x1 / inputSize,
+          y1: d.y1 / inputSize,
+          x2: d.x2 / inputSize,
+          y2: d.y2 / inputSize,
+        }))
+        // Drop detections that cover >50% of the frame (segmentation mask artifacts)
+        .filter(d => (d.x2 - d.x1) * (d.y2 - d.y1) < 0.5);
     } catch (e) {
       console.error('[useYOLO] inference error', e);
       return [];

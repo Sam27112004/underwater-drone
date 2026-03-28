@@ -465,6 +465,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  z-index: 10;
 }
 
 .video-control-label {
