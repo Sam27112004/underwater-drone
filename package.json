@@ -1,18 +1,11 @@
 {
-  "name": "rov-control-backend",
+  "name": "rov-control-station",
   "version": "1.0.0",
-  "type": "module",
-  "description": "ROV Control Backend with BlueOS Integration",
-  "main": "server.js",
+  "description": "ROV Control Station — orchestrates frontend build + backend server",
   "scripts": {
-    "start": "node server.js",
-    "dev": "concurrently \"cd client && npm run build --watch\" \"node server.js\""
-  },
-  "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "node-fetch": "^3.3.2",
-    "ws": "^8.19.0"
+    "start": "node backend/server.js",
+    "dev": "concurrently \"cd frontend && npm run build -- --watch\" \"node backend/server.js\"",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

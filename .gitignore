@@ -18,10 +18,7 @@ Thumbs.db
 .claude/
 CLAUDE.md
 
-# Build artifacts (Vite output — client/public/ is the source, public/ is the copy)
-public/assets/
-public/models/
-
-# Model files are tracked via Git LFS (.gitattributes) — do NOT ignore them here
+# Build artifacts (Vite outputs entirely into public/ — client/public/ is the source)
+public/
 
 tagged_frames/

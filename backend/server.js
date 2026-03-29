@@ -33,7 +33,7 @@ console.log("BlueOS Config:", BLUEOS_CONFIG);
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
-app.use(express.static(join(__dirname, "public")));
+app.use(express.static(join(__dirname, "../public")));
 
 // Store connected clients and telemetry cache
 const clients = new Set();
@@ -45,7 +45,7 @@ let lastHeartbeatRawLogAt = 0;
 let lastCompanionHeartbeatLogAt = 0;
 
 // ── Frame tagging storage ─────────────────────────────────────────────────────
-const TAGGED_FRAMES_DIR = join(__dirname, "tagged_frames");
+const TAGGED_FRAMES_DIR = join(__dirname, "../tagged_frames");
 const TAGS_JSON = join(TAGGED_FRAMES_DIR, "tags.json");
 try {
   fs.mkdirSync(TAGGED_FRAMES_DIR, { recursive: true });
@@ -1027,7 +1027,7 @@ function generateReport(tags) {
 
 // Serve frontend for all other routes
 app.get((req, res) => {
-  res.sendFile(join(__dirname, "public/index.html"));
+  res.sendFile(join(__dirname, "../public/index.html"));
 });
 
 // Start server

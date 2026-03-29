@@ -45,11 +45,12 @@ git lfs pull
 ## Installation
 
 ```bash
-# Backend dependencies
-npm install
+# Install all dependencies (backend + frontend)
+npm run install:all
 
-# Frontend dependencies
-cd client && npm install && cd ..
+# Or manually:
+cd backend && npm install && cd ..
+cd frontend && npm install && cd ..
 ```
 
 ## Running
@@ -67,14 +68,14 @@ Open `http://localhost:3000`.
 ### Production
 
 ```bash
-cd client && npm run build && cd ..
+cd frontend && npm run build && cd ..
 npm start
 ```
 
 ### Frontend HMR (Vite dev server only)
 
 ```bash
-cd client && npm run dev   # http://localhost:5173
+cd frontend && npm run dev   # http://localhost:5173
 ```
 
 > Note: WebSocket telemetry connects to `window.location.host` directly, so it won't work on the Vite dev server port. Use `npm run dev` from the root instead for full functionality.
@@ -95,23 +96,46 @@ PORT=3000
 
 ```
 underwater-drone/
-├── client/                     # React 18 + Vite frontend
+├── backend/                        # Express + WebSocket backend
+│   ├── server.js                   # Main server — MAVLink, telemetry, video proxy, API
+│   ├── scripts/
+│   │   └── enhance.py              # OpenCV CLAHE underwater image enhancement
+│   ├── node_modules/
+│   └── package.json
+├── frontend/                       # React 18 + Vite frontend
 │   ├── public/
-│   │   └── models/             # ONNX model files (source of truth, tracked via LFS)
+│   │   └── models/                 # ONNX model files (source of truth, tracked via LFS)
 │   └── src/
-│       ├── App.jsx             # Root component — state, hooks, layout
-│       ├── components/         # UI components
-│       ├── hooks/              # useWebSocket, useTelemetry, useGamepad, useYOLO
-│       └── models/registry.js  # Model registry — add new models here
-├── scripts/
-│   └── mosaic.py               # OpenCV CLAHE + stitching script
-├── public/                     # Vite build output (gitignored except index.html)
-│   └── models/                 # Build copy of client/public/models/ — do not edit here
-├── tagged_frames/              # Saved tagged frames + tags.json (gitignored)
-├── server.js                   # Express + WebSocket backend
-├── .gitattributes              # Git LFS rules (*.onnx, *.pt, *.pth, *.weights)
-├── .env                        # Local config (gitignored)
-└── package.json
+│       ├── App.jsx                 # Root component — state, hooks, layout
+│       ├── main.jsx                # React entry point
+│       ├── components/
+│       │   ├── AIPanel.jsx         # Model selector + inference controls
+│       │   ├── AttitudeIndicator.jsx  # Canvas-drawn horizon (roll/pitch/yaw)
+│       │   ├── CoreStatus.jsx      # ARM/DISARM, mode selector
+│       │   ├── Cursor.jsx          # Custom cursor with magnetic effect
+│       │   ├── DetectionOverlay.jsx   # Bounding box canvas overlay on video
+│       │   ├── EnergyGrid.jsx      # Battery voltage/current/remaining
+│       │   ├── Footer.jsx          # Connection details bar
+│       │   ├── GalleryPanel.jsx    # Tagged frame gallery — browse + delete
+│       │   ├── Header.jsx          # Logo + status indicators
+│       │   ├── InspectionPanel.jsx # HTML inspection report generator
+│       │   ├── Peripherals.jsx     # Keyboard buttons + gamepad status
+│       │   ├── TelemetryGrid.jsx   # Roll/pitch/yaw/depth/pressure/temp display
+│       │   └── VideoSection.jsx    # MJPEG / WebRTC video + connect controls
+│       ├── hooks/
+│       │   ├── useWebSocket.js     # WS connection, reconnect, sendCommand
+│       │   ├── useTelemetry.js     # Parses raw WS messages into telemetry objects
+│       │   ├── useGamepad.js       # Gamepad API polling, deadzone, axis mapping
+│       │   └── useYOLO.js          # ONNX Runtime Web inference hook
+│       ├── models/
+│       │   └── registry.js         # Model registry — add new models here
+│       └── styles/
+│           └── globals.css         # Global dark-theme styles
+├── public/                         # Vite build output (gitignored — regenerated on build)
+├── tagged_frames/                  # Saved tagged frames + tags.json (gitignored)
+├── .gitattributes                  # Git LFS rules (*.onnx, *.pt, *.pth, *.weights)
+├── .env                            # Local config (gitignored)
+└── package.json                    # Root orchestrator — npm run dev / npm start
 ```
 
 ## Adding a New Detection Model
@@ -120,8 +144,8 @@ underwater-drone/
    ```bash
    yolo export model=yourmodel.pt format=onnx imgsz=640 simplify=True
    ```
-2. Place the `.onnx` file in `client/public/models/`
-3. Add an entry to `client/src/models/registry.js` — the dropdown updates automatically
+2. Place the `.onnx` file in `frontend/public/models/`
+3. Add an entry to `frontend/src/models/registry.js` — the dropdown updates automatically
 4. Commit and push via LFS (see below)
 
 ## Git LFS — Working with Models
@@ -138,8 +162,8 @@ git lfs pull          # fetches any new/updated LFS files
 ### Push new or updated models
 
 ```bash
-# Copy model into client/public/models/
-git add client/public/models/yourmodel.onnx
+# Copy model into frontend/public/models/
+git add frontend/public/models/yourmodel.onnx
 git commit -m "feat: add yourmodel detection model"
 git push origin main  # LFS objects are uploaded automatically before the refs
 ```
@@ -157,7 +181,7 @@ git lfs status        # shows staged LFS files
 git lfs env           # shows LFS config and endpoint
 ```
 
-> The `public/models/` directory at the repo root is **build output** (Vite copies `client/public/` there on every build). It is gitignored — only `client/public/models/` is the source and tracked in git.
+> The `public/` directory at the repo root is **build output** (Vite copies `frontend/public/` there on every build). It is gitignored — only `frontend/public/models/` is the source and tracked in git.
 
 ## API Reference
 
@@ -171,7 +195,7 @@ git lfs env           # shows LFS config and endpoint
 | DELETE | `/api/tags/:id` | Delete a tagged frame |
 | DELETE | `/api/tags` | Reset all tagged frames |
 | GET | `/api/report` | Download HTML inspection report |
-| POST | `/api/mosaic` | Generate OpenCV mosaic from tagged frames |
+| POST | `/api/mosaic` | Generate mosaic from tagged frames |
 | GET | `/video/mjpeg` | RTSP → MJPEG proxy stream |
 
 ## Troubleshooting
@@ -193,7 +217,7 @@ Set `PORT=3001` in `.env`.
 **npm install fails**
 ```bash
 npm cache clean --force
-npm install
+npm run install:all
 ```
 
 ## License

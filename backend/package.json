@@ -1,0 +1,20 @@
+{
+  "name": "rov-control-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "ROV Control Backend with BlueOS Integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "concurrently \"cd ../frontend && npm run build --watch\" \"node server.js\""
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "node-fetch": "^3.3.2",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
